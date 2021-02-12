@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="/FilesystemWatcher">
+    <file>application.ico</file>
+    <file>eye-0.svg</file>
+    <file>eye-1.svg</file>
+    <file>eye-2.svg</file>
+    <file>eye-disabled.svg</file>
+    <file>qt.ico</file>
+    <file>file.svg</file>
+    <file>folder.svg</file>
+  </qresource>
+</RCC>

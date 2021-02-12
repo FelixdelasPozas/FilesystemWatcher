@@ -1,0 +1,160 @@
+/*
+ File: FilesystemWatcher.h
+ Created on: 3 feb. 2021
+ Author: Felix de las Pozas Alvarez
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef FILESYSTEMWATCHER_H_
+#define FILESYSTEMWATCHER_H_
+
+#include "ui_filesystemWatcher.h"
+
+// Qt
+#include <QDialog>
+#include <QSystemTrayIcon>
+
+// Project
+#include "AddObjectDialog.h"
+#include "WatchThread.h"
+
+class QCloseEvent;
+
+/** \class FilesystemWatcher
+ * \brief Implements the main dialog of the application.
+ *
+ */
+class FilesystemWatcher
+: public QDialog
+, private Ui::FilesystemWatcher
+{
+    Q_OBJECT
+  public:
+    /** \brief FilesystemWatcher class constructor.
+     * \param[in] p Raw pointer of the widget parent of this one.
+     * \param[in] f Dialog flags.
+     *
+     */
+    explicit FilesystemWatcher(QWidget *p = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+
+    /** \brief FilesystemWatcher class virtual destructor.
+     *
+     */
+    virtual ~FilesystemWatcher();
+
+  protected:
+    virtual void closeEvent(QCloseEvent *e);
+
+  private slots:
+    /** \brief Closes the application.
+     *
+     */
+    void quitApplication();
+
+    /** \brief Restores the main dialog if the user double-clicks the tray icon.
+     * \param[in] reason Tray icon activation reason.
+     *
+     */
+    void onTrayActivated(QSystemTrayIcon::ActivationReason reason = QSystemTrayIcon::DoubleClick);
+
+    /** \brief Shows the about dialog.
+     *
+     */
+    void onAboutButtonClicked();
+
+    /** \brief Shows the file selection dialog.
+     *
+     */
+    void onAddObjectButtonClicked();
+
+    /** \brief Updates the UI when the user changes the tab.
+     * \param[in] index Current tab index.
+     *
+     */
+    void onTabChanged(int index);
+
+    /** \brief Copies the events contents to the clipboard.
+     *
+     */
+    void onCopyButtonClicked();
+
+    /** \brief Warns the user about an error.
+     * \param[in] message Error message.
+     *
+     */
+    void onWatcherError(const QString message);
+
+    /** \brief Alarms the user about an event.
+     * \param[in] object Object name.
+     * \param[in] e Event.
+     *
+     */
+    void onModification(const std::wstring object, const WatchThread::Event e);
+
+    /** \brief Animates the tray icon.
+     *
+     */
+    void updateTrayIcon();
+
+    /** \brief Stops the lights and sound alarms.
+     *
+     */
+    void stopAlarms();
+
+  private:
+    struct Object
+    {
+      const std::wstring  path;
+      const AlarmFlags    alarms;
+      const QColor        color;
+      const unsigned int  sound;
+      const unsigned long properties;
+      WatchThread        *thread;
+
+      Object(const std::wstring &objectPath, const AlarmFlags alarmFlags,
+             const QColor &lightsColor, const unsigned int alarmSound,
+             const unsigned long watchProperties, WatchThread *t)
+      : path{objectPath}, alarms{alarmFlags}, color{lightsColor},
+        sound{alarmSound}, properties{watchProperties}, thread{t} {};
+    };
+
+    /** \brief Helper method to connect signals to slots in the dialog.
+     *
+     */
+    void connectSignals();
+
+    /** \brief Helper method to setup and connect the tray icon.
+     *
+     */
+    void setupTrayIcon();
+
+    /** \brief Helper method that loads application settings from the registry.
+     *
+     */
+    void loadSettings();
+
+    /** \brief Helper method that saves application settings to the registry.
+     *
+     */
+    void saveSettings();
+
+    QSystemTrayIcon    *m_trayIcon;   /** tray icon.                                      */
+    bool                m_watching;   /** true if watching and false otherwise.           */
+    bool                m_needsExit;  /** true to close the application, false otherwise. */
+    std::vector<Object> m_objects;    /** list of watched objects.                        */
+    QAction            *m_stopAction; /** stop alarms tray menu action.                   */
+};
+
+#endif // FILESYSTEMWATCHER_H_
