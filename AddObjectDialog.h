@@ -25,6 +25,9 @@
 // Qt
 #include <QDialog>
 
+class QSoundEffect;
+class QTemporaryFile;
+
 enum AlarmFlags : char
 {
   NONE = 0, MESSAGE = 1, LIGHTS = 2, SOUND = 4
@@ -72,10 +75,10 @@ class AddObjectDialog
      */
     AlarmFlags objectAlarms() const;
 
-    /** \brief Returns the selected alarm sound.
+    /** \brief Returns the alarm volume value.
      *
      */
-    int alarmSound() const;
+    int alarmVolume() const;
 
     /** \brief Returns the selected alarm color for the keyboard lights.
      *
@@ -116,6 +119,12 @@ class AddObjectDialog
      */
     void onSoundAlarmCheckStateChanged(int state);
 
+    /** \brief Updates the volume of the alarm sound.
+     * \param[in] value Sound volume in [0,99].
+     *
+     */
+    void onSoundVolumeChanged(int value);
+
   private:
     /** \brief Helper method to connect signals and slots.
      *
@@ -138,7 +147,14 @@ class AddObjectDialog
      */
     void updateEventsWidgets(bool isDirectory);
 
-    QColor m_color; /** keyboard lights color. */
+    /** \brief Helper method to create the temporary file and classes for the sound.
+     *
+     */
+    void createSoundFile();
+
+    QColor          m_color;     /** keyboard lights color.    */
+    QSoundEffect   *m_sound;     /** sound class.              */
+    QTemporaryFile *m_soundFile; /** wave file temporary file. */
 };
 
 #endif // ADDOBJECTDIALOG_H_

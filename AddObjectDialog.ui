@@ -212,7 +212,7 @@ QGroupBox::title {
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,0,1,0">
         <item>
          <widget class="QCheckBox" name="m_soundAlarm">
           <property name="text">
@@ -221,9 +221,35 @@ QGroupBox::title {
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="m_alarmCombo">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Volume</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSlider" name="m_volumeSlider">
           <property name="enabled">
            <bool>false</bool>
+          </property>
+          <property name="value">
+           <number>99</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="m_volumeNumber">
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>100%</string>
           </property>
          </widget>
         </item>

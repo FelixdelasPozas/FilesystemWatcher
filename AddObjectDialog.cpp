@@ -26,6 +26,8 @@
 #include <QPixmap>
 #include <QIcon>
 #include <QColorDialog>
+#include <QSoundEffect>
+#include <QTemporaryFile>
 
 // C++
 #include <minwindef.h>
@@ -41,7 +43,7 @@ AddObjectDialog::AddObjectDialog(QWidget *p, Qt::WindowFlags f)
 
   updateColorButton();
 
-  // TODO: sounds
+  createSoundFile();
 
   if(!LogiLED::isAvailable())
   {
@@ -53,6 +55,12 @@ AddObjectDialog::AddObjectDialog(QWidget *p, Qt::WindowFlags f)
 AddObjectDialog::~AddObjectDialog()
 {
   if(m_useKeyboardLights->isChecked()) stopKeyboardColors();
+
+  if(m_sound->isPlaying()) m_sound->stop();
+  delete m_sound;
+  m_sound = nullptr;
+  delete m_soundFile;
+  m_soundFile = nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -63,6 +71,7 @@ void AddObjectDialog::connectSignals()
   connect(m_lightButton,       SIGNAL(clicked()),         this, SLOT(onColorButtonClicked()));
   connect(m_useKeyboardLights, SIGNAL(stateChanged(int)), this, SLOT(onKeyboardCheckStateChange(int)));
   connect(m_soundAlarm,        SIGNAL(stateChanged(int)), this, SLOT(onSoundAlarmCheckStateChanged(int)));
+  connect(m_volumeSlider,      SIGNAL(valueChanged(int)), this, SLOT(onSoundVolumeChanged(int)));
 }
 
 //-----------------------------------------------------------------------------
@@ -131,9 +140,9 @@ AlarmFlags AddObjectDialog::objectAlarms() const
 }
 
 //-----------------------------------------------------------------------------
-int AddObjectDialog::alarmSound() const
+int AddObjectDialog::alarmVolume() const
 {
-  return m_alarmCombo->currentIndex();
+  return m_volumeSlider->value() + 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -205,7 +214,13 @@ void AddObjectDialog::onKeyboardCheckStateChange(int state)
 //-----------------------------------------------------------------------------
 void AddObjectDialog::onSoundAlarmCheckStateChanged(int state)
 {
-  m_alarmCombo->setEnabled(state == Qt::Checked);
+  m_volumeNumber->setEnabled(state == Qt::Checked);
+  m_volumeSlider->setEnabled(state == Qt::Checked);
+
+  if(state == Qt::Checked && !m_sound->isPlaying())
+  {
+    m_sound->play();
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -219,5 +234,21 @@ void AddObjectDialog::updateEventsWidgets(bool isDirectory)
 
   m_createProp->setEnabled(isDirectory);
   m_createProp->setChecked(isDirectory);
+}
 
+//-----------------------------------------------------------------------------
+void AddObjectDialog::createSoundFile()
+{
+  m_sound = new QSoundEffect(this);
+  m_soundFile = QTemporaryFile::createLocalFile(":/FilesystemWatcher/Beeper.wav");
+  m_sound->setSource(QUrl::fromLocalFile(m_soundFile->fileName()));
+  m_sound->setLoopCount(3);
+  m_sound->setVolume(1);
+}
+
+//-----------------------------------------------------------------------------
+void AddObjectDialog::onSoundVolumeChanged(int value)
+{
+  m_sound->setVolume(static_cast<double>(value + 1)/100);
+  if(!m_sound->isPlaying()) m_sound->play();
 }

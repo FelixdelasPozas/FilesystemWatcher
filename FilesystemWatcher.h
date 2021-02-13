@@ -31,6 +31,8 @@
 #include "WatchThread.h"
 
 class QCloseEvent;
+class QSoundEffect;
+class QTemporaryFile;
 
 /** \class FilesystemWatcher
  * \brief Implements the main dialog of the application.
@@ -119,15 +121,16 @@ class FilesystemWatcher
       const std::wstring  path;
       const AlarmFlags    alarms;
       const QColor        color;
-      const unsigned int  sound;
+      unsigned char       volume;
       const unsigned long properties;
       WatchThread        *thread;
 
       Object(const std::wstring &objectPath, const AlarmFlags alarmFlags,
-             const QColor &lightsColor, const unsigned int alarmSound,
+             const QColor &lightsColor, const unsigned char alarmVolume,
              const unsigned long watchProperties, WatchThread *t)
       : path{objectPath}, alarms{alarmFlags}, color{lightsColor},
-        sound{alarmSound}, properties{watchProperties}, thread{t} {};
+        volume{alarmVolume}, properties{watchProperties}, thread{t}
+        {};
     };
 
     /** \brief Helper method to connect signals to slots in the dialog.
@@ -155,6 +158,8 @@ class FilesystemWatcher
     bool                m_needsExit;  /** true to close the application, false otherwise. */
     std::vector<Object> m_objects;    /** list of watched objects.                        */
     QAction            *m_stopAction; /** stop alarms tray menu action.                   */
+    QSoundEffect       *m_alarmSound; /** alarm sound.                                    */
+    QTemporaryFile     *m_soundFile;  /** temporary file for alarm wav file.              */
 };
 
 #endif // FILESYSTEMWATCHER_H_

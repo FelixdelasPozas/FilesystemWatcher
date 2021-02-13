@@ -142,6 +142,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="m_stopButton">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>Stop alarms</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>

@@ -8,5 +8,6 @@
     <file>qt.ico</file>
     <file>file.svg</file>
     <file>folder.svg</file>
+    <file>Beeper.wav</file>
   </qresource>
 </RCC>

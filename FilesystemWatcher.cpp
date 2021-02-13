@@ -31,6 +31,8 @@
 #include <QSettings>
 #include <QMessageBox>
 #include <QTimer>
+#include <QSoundEffect>
+#include <QTemporaryFile>
 
 const QString GEOMETRY = "Geometry";
 
@@ -57,6 +59,8 @@ FilesystemWatcher::FilesystemWatcher(QWidget *p, Qt::WindowFlags f)
   m_objectsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeMode::Stretch);
   m_objectsTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeMode::Stretch);
 
+  m_stopButton->setVisible(false);
+
   connectSignals();
 
   setupTrayIcon();
@@ -82,10 +86,11 @@ FilesystemWatcher::~FilesystemWatcher()
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::connectSignals()
 {
-  connect(m_quit,      SIGNAL(clicked(bool)),       this, SLOT(quitApplication()));
-  connect(m_about,     SIGNAL(clicked(bool)),       this, SLOT(onAboutButtonClicked()));
-  connect(m_addObject, SIGNAL(clicked(bool)),       this, SLOT(onAddObjectButtonClicked()));
-  connect(m_copy,      SIGNAL(clicked(bool)),       this, SLOT(onCopyButtonClicked()));
+  connect(m_quit,       SIGNAL(clicked(bool)),       this, SLOT(quitApplication()));
+  connect(m_about,      SIGNAL(clicked(bool)),       this, SLOT(onAboutButtonClicked()));
+  connect(m_addObject,  SIGNAL(clicked(bool)),       this, SLOT(onAddObjectButtonClicked()));
+  connect(m_copy,       SIGNAL(clicked(bool)),       this, SLOT(onCopyButtonClicked()));
+  connect(m_stopButton, SIGNAL(clicked(bool)),       this, SLOT(stopAlarms()));
 
   connect(m_tabWidget, SIGNAL(currentChanged(int)), this, SLOT(onTabChanged(int)));
 
@@ -165,7 +170,7 @@ void FilesystemWatcher::onAddObjectButtonClicked()
 
     auto thread = new WatchThread(std::filesystem::path(obj.toStdWString()), dialog.objectProperties());
 
-    m_objects.emplace_back(obj.toStdWString(), dialog.objectAlarms(), dialog.alarmColor(), dialog.alarmSound(), dialog.objectProperties(), thread);
+    m_objects.emplace_back(obj.toStdWString(), dialog.objectAlarms(), dialog.alarmColor(), dialog.alarmVolume(), dialog.objectProperties(), thread);
 
     connect(thread, SIGNAL(error(const QString)),
             this,   SLOT(onWatcherError(const QString)));
@@ -294,7 +299,12 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
 
     if((data.alarms & AlarmFlags::SOUND) != 0)
     {
-      // TODO
+      m_alarmSound = new QSoundEffect(this);
+      m_soundFile = QTemporaryFile::createLocalFile(":/FilesystemWatcher/Beeper.wav");
+      m_alarmSound->setSource(QUrl::fromLocalFile(m_soundFile->fileName()));
+      m_alarmSound->setLoopCount(QSoundEffect::Infinite);
+      m_alarmSound->setVolume(static_cast<double>(data.volume)/100.0);
+      m_alarmSound->play();
     }
 
     if((data.alarms & AlarmFlags::LIGHTS) != 0)
@@ -305,6 +315,7 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
     if((data.alarms & (AlarmFlags::LIGHTS|AlarmFlags::SOUND)) != 0)
     {
       m_stopAction->setVisible(true);
+      m_stopButton->setVisible(true);
     }
   }
 }
@@ -334,8 +345,17 @@ void FilesystemWatcher::updateTrayIcon()
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::stopAlarms()
 {
-  // TODO: sounds
   if(LogiLED::getInstance().isInUse()) LogiLED::getInstance().stopLights();
 
+  if(m_alarmSound)
+  {
+    m_alarmSound->stop();
+    delete m_alarmSound;
+    m_alarmSound = nullptr;
+    delete m_soundFile;
+    m_soundFile = nullptr;
+  }
+
   m_stopAction->setVisible(false);
+  m_stopButton->setVisible(false);
 }

@@ -23,7 +23,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
 # Find the QtWidgets library
-find_package(Qt5 COMPONENTS Core Widgets)
+find_package(Qt5 COMPONENTS Core Widgets Multimedia)
 
 include_directories ( ${Qt5Widgets_INCLUDE_DIRS}
                       ${Qt5Core_INCLUDE_DIRS}
@@ -34,6 +34,7 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
 endif (CMAKE_BUILD_TYPE MATCHES Debug)
 
 set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Multimedia_EXECUTABLE_COMPILE_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Core_EXECUTABLE_COMPILE_FLAGS}")
 
@@ -70,6 +71,7 @@ set (SOURCES
 set (EXTERNAL_LIBRARIES
 	Qt5::Core
 	Qt5::Widgets
+	Qt5::Multimedia
 	Shlwapi
 	${LOGITECH_LIBRARY}
 	)
