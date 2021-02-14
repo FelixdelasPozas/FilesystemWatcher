@@ -58,6 +58,7 @@ FilesystemWatcher::FilesystemWatcher(QWidget *p, Qt::WindowFlags f)
   m_objectsTable->setModel(new ObjectsTableModel());
   m_objectsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeMode::Stretch);
   m_objectsTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeMode::Stretch);
+  m_objectsTable->setContextMenuPolicy(Qt::CustomContextMenu);
 
   connectSignals();
 
@@ -97,6 +98,9 @@ void FilesystemWatcher::connectSignals()
 
   connect(m_objectsTable->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
           this,                             SLOT(onObjectSelected(const QModelIndex &, const QModelIndex &)));
+
+  connect(m_objectsTable, SIGNAL(customContextMenuRequested(const QPoint &)),
+          this,           SLOT(onCustomMenuRequested(const QPoint &)));
 }
 
 //-----------------------------------------------------------------------------
@@ -439,6 +443,37 @@ void FilesystemWatcher::onRemoveButtonClicked()
 
     m_objects.erase(m_objects.begin() + index.row());
 
-    m_reset->setEnabled(!m_objects.empty());
+    m_removeObject->setEnabled(!m_objects.empty());
+  }
+}
+
+//-----------------------------------------------------------------------------
+void FilesystemWatcher::onCustomMenuRequested(const QPoint &p)
+{
+  QMenu menu;
+  auto removeAction = new QAction("Remove");
+  auto resetAction  = new QAction("Reset");
+
+  menu.addAction(removeAction);
+  menu.addAction(resetAction);
+  menu.addSeparator();
+  menu.addAction(new QAction("Cancel"));
+
+  auto selectedAction = menu.exec(m_objectsTable->viewport()->mapToGlobal(p));
+  const auto idx = m_objectsTable->indexAt(p);
+  m_objectsTable->selectionModel()->blockSignals(true);
+  m_objectsTable->setCurrentIndex(idx);
+  m_objectsTable->selectionModel()->blockSignals(false);
+
+  if(selectedAction == removeAction)
+  {
+    onRemoveButtonClicked();
+  }
+  else
+  {
+    if(selectedAction == resetAction)
+    {
+      onResetButtonClicked();
+    }
   }
 }

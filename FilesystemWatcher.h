@@ -133,6 +133,12 @@ class FilesystemWatcher
      */
     void onRemoveButtonClicked();
 
+    /** \brief Displays the context menu for the objects table.
+     * \param[in] p Point where the context menu was requested.
+     *
+     */
+    void onCustomMenuRequested(const QPoint &p);
+
   private:
     struct Object
     {
