@@ -25,6 +25,7 @@
 
 // Qt
 #include <QAbstractTableModel>
+#include <QColor>
 
 /** \class ObjectsTableModel
  * \brief Implements the model for the objects table view.
@@ -58,7 +59,19 @@ class ObjectsTableModel
      * \param[in] obj Objects path.
      *
      */
-    void addObject(const QString &obj);
+    void addObject(const QString &obj, const QColor &color);
+
+    /** \brief Resets the number of events of the given object.
+     * \param[in] obj Path of object.
+     *
+     */
+    void resetObject(const std::wstring &obj);
+
+    /** \brief Removes the given object from the model.
+     * \param[in] obj Path of object.
+     *
+     */
+    void removeObject(const std::wstring &obj);
 
   public slots:
     /** \brief Updates the model data.
@@ -81,7 +94,7 @@ class ObjectsTableModel
      */
     QString eventText(const WatchThread::Event &e);
 
-    std::vector<std::tuple<std::wstring, std::wstring, unsigned long>> m_data; /** model data. */
+    std::vector<std::tuple<std::wstring, std::wstring, unsigned long, QColor>> m_data; /** model data. */
 };
 
 #endif // OBJECTSTABLEMODEL_H_

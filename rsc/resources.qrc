@@ -9,6 +9,11 @@
     <file>file.svg</file>
     <file>folder.svg</file>
     <file>logitech.ico</file>
+    <file>alarm.svg</file>
+    <file>add.svg</file>
+    <file>remove.svg</file>
+    <file>copy.svg</file>
+    <file>reset.svg</file>
     <file>Beeper.wav</file>
   </qresource>
 </RCC>

@@ -86,10 +86,17 @@ QVariant ObjectsTableModel::data(const QModelIndex &index, int role) const
         }
         break;
       case Qt::BackgroundRole:
-        if(index.column() == 1)
+        switch(index.column())
         {
-          auto changes = std::get<2>(m_data.at(index.row()));
-          if(changes > 0) return QColor(200,120,120);
+          case 0:
+            return std::get<3>(m_data.at(index.row()));
+            break;
+          case 1:
+            {
+              auto changes = std::get<2>(m_data.at(index.row()));
+              if(changes > 0) return QColor(200,120,120);
+            }
+            break;
         }
         break;
       default:
@@ -129,7 +136,7 @@ void ObjectsTableModel::modification(const std::wstring obj, const WatchThread::
 {
   auto objText = QString::fromStdWString(obj);
 
-  auto matchObj = [&objText](std::tuple<std::wstring, std::wstring, unsigned long> &p)
+  auto matchObj = [&objText](std::tuple<std::wstring, std::wstring, unsigned long, QColor> &p)
   {
     auto name = QString::fromStdWString(std::get<0>(p));
     return objText.startsWith(name);
@@ -155,7 +162,7 @@ void ObjectsTableModel::rename(const std::wstring oldName, const std::wstring ne
 {
   auto objText = QString::fromStdWString(oldName);
 
-  auto matchObj = [&objText](std::tuple<std::wstring, std::wstring, unsigned long> &p)
+  auto matchObj = [&objText](std::tuple<std::wstring, std::wstring, unsigned long, QColor> &p)
   {
     auto name = QString::fromStdWString(std::get<0>(p));
     return objText.startsWith(name) || name.compare(objText, Qt::CaseInsensitive) == 0;
@@ -178,11 +185,11 @@ void ObjectsTableModel::rename(const std::wstring oldName, const std::wstring ne
 }
 
 //-----------------------------------------------------------------------------
-void ObjectsTableModel::addObject(const QString &obj)
+void ObjectsTableModel::addObject(const QString &obj, const QColor &color)
 {
   beginInsertRows(QModelIndex(), m_data.size(), m_data.size());
 
-  m_data.emplace_back(obj.toStdWString(), std::wstring(), 0);
+  m_data.emplace_back(obj.toStdWString(), std::wstring(), 0, color);
 
   endInsertRows();
 }
@@ -211,4 +218,44 @@ QString ObjectsTableModel::eventText(const WatchThread::Event &e)
   }
 
   return tr("Unknown event");
+}
+
+//-----------------------------------------------------------------------------
+void ObjectsTableModel::resetObject(const std::wstring &obj)
+{
+  auto findObject = [&obj](std::tuple<std::wstring, std::wstring, unsigned long, QColor> &p)
+  {
+    return std::get<0>(p).compare(obj) == 0;
+  };
+  auto it = std::find_if(m_data.begin(), m_data.end(), findObject);
+
+  if(it != m_data.end())
+  {
+    auto &data = *it;
+    std::get<2>(data) = 0;
+
+    const auto distance = std::distance(m_data.begin(), it);
+    auto tl = index(distance, 1);
+    auto br = index(distance, 2);
+
+    emit dataChanged(tl, br, { Qt::DisplayRole, Qt::BackgroundColorRole });
+  }
+}
+
+//-----------------------------------------------------------------------------
+void ObjectsTableModel::removeObject(const std::wstring &obj)
+{
+  auto findObject = [&obj](std::tuple<std::wstring, std::wstring, unsigned long, QColor> &p)
+  {
+    return std::get<0>(p).compare(obj) == 0;
+  };
+  auto it = std::find_if(m_data.begin(), m_data.end(), findObject);
+
+  if(it != m_data.end())
+  {
+    const auto distance = std::distance(m_data.begin(), it);
+    beginRemoveRows(QModelIndex(), distance, distance);
+    m_data.erase(it);
+    endRemoveRows();
+  }
 }

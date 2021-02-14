@@ -81,12 +81,6 @@ class FilesystemWatcher
      */
     void onAddObjectButtonClicked();
 
-    /** \brief Updates the UI when the user changes the tab.
-     * \param[in] index Current tab index.
-     *
-     */
-    void onTabChanged(int index);
-
     /** \brief Copies the events contents to the clipboard.
      *
      */
@@ -122,21 +116,39 @@ class FilesystemWatcher
      */
     void stopAlarms();
 
+    /** \brief Enables/disables the reset object button when the user selects one in the table.
+     * \param[in] selected QModelIndex of selected object.
+     * \param[in] deselected QModelIndex of deselected object.
+     *
+     */
+    void onObjectSelected(const QModelIndex &selected, const QModelIndex &deselected);
+
+    /** \brief Resets the events number of the selected object.
+     *
+     */
+    void onResetButtonClicked();
+
+    /** \brief Removes the selected object in the objects table.
+     *
+     */
+    void onRemoveButtonClicked();
+
   private:
     struct Object
     {
-      std::filesystem::path  path;   /** object path.                      */
-      const AlarmFlags       alarms; /** alarms for the user.              */
-      const QColor           color;  /** color for keyboard alarm.         */
-      unsigned char          volume; /** volume of sound alarm in [1-100]. */
-      const unsigned long    events; /** events to watch.                  */
-      WatchThread           *thread; /** watcher thread.                   */
+      std::filesystem::path path;         /** object path.                      */
+      AlarmFlags            alarms;       /** alarms for the user.              */
+      QColor                color;        /** color for keyboard alarm.         */
+      unsigned char         volume;       /** volume of sound alarm in [1-100]. */
+      unsigned long         events;       /** events to watch.                  */
+      WatchThread          *thread;       /** watcher thread.                   */
+      unsigned long         eventsNumber; /** number of registed events.        */
 
       Object(const std::wstring &objectPath, const AlarmFlags alarmFlags,
              const QColor &lightsColor, const unsigned char alarmVolume,
              const unsigned long watchEvents, WatchThread *t)
       : path{objectPath}, alarms{alarmFlags}, color{lightsColor},
-        volume{alarmVolume}, events{watchEvents}, thread{t}
+        volume{alarmVolume}, events{watchEvents}, thread{t}, eventsNumber{0}
         {};
     };
 

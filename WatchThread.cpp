@@ -27,8 +27,6 @@
 #include <windows.h>
 #include <fileapi.h>
 
-#include <iostream>
-
 //-----------------------------------------------------------------------------
 WatchThread::WatchThread(const std::filesystem::path &object, const unsigned long events, QObject *p)
 : QThread{p}

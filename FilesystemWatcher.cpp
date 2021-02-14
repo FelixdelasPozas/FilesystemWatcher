@@ -34,8 +34,6 @@
 #include <QSoundEffect>
 #include <QTemporaryFile>
 
-#include <iostream>
-
 const QString GEOMETRY = "Geometry";
 
 Q_DECLARE_METATYPE(std::wstring);
@@ -60,8 +58,6 @@ FilesystemWatcher::FilesystemWatcher(QWidget *p, Qt::WindowFlags f)
   m_objectsTable->setModel(new ObjectsTableModel());
   m_objectsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeMode::Stretch);
   m_objectsTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeMode::Stretch);
-
-  m_stopButton->setVisible(false);
 
   connectSignals();
 
@@ -88,16 +84,19 @@ FilesystemWatcher::~FilesystemWatcher()
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::connectSignals()
 {
-  connect(m_quit,       SIGNAL(clicked(bool)),       this, SLOT(quitApplication()));
-  connect(m_about,      SIGNAL(clicked(bool)),       this, SLOT(onAboutButtonClicked()));
-  connect(m_addObject,  SIGNAL(clicked(bool)),       this, SLOT(onAddObjectButtonClicked()));
-  connect(m_copy,       SIGNAL(clicked(bool)),       this, SLOT(onCopyButtonClicked()));
-  connect(m_stopButton, SIGNAL(clicked(bool)),       this, SLOT(stopAlarms()));
-
-  connect(m_tabWidget, SIGNAL(currentChanged(int)), this, SLOT(onTabChanged(int)));
+  connect(m_quit,         SIGNAL(clicked(bool)), this, SLOT(quitApplication()));
+  connect(m_about,        SIGNAL(clicked(bool)), this, SLOT(onAboutButtonClicked()));
+  connect(m_addObject,    SIGNAL(clicked(bool)), this, SLOT(onAddObjectButtonClicked()));
+  connect(m_copy,         SIGNAL(clicked(bool)), this, SLOT(onCopyButtonClicked()));
+  connect(m_stopButton,   SIGNAL(clicked(bool)), this, SLOT(stopAlarms()));
+  connect(m_reset,        SIGNAL(clicked(bool)), this, SLOT(onResetButtonClicked()));
+  connect(m_removeObject, SIGNAL(clicked(bool)), this, SLOT(onRemoveButtonClicked()));
 
   connect(m_trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
           this,       SLOT(onTrayActivated(QSystemTrayIcon::ActivationReason)));
+
+  connect(m_objectsTable->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
+          this,                             SLOT(onObjectSelected(const QModelIndex &, const QModelIndex &)));
 }
 
 //-----------------------------------------------------------------------------
@@ -146,19 +145,23 @@ void FilesystemWatcher::loadSettings()
 }
 
 //-----------------------------------------------------------------------------
+void FilesystemWatcher::onObjectSelected(const QModelIndex &selected, const QModelIndex &deselected)
+{
+  if(selected.isValid())
+  {
+    auto distance = selected.row();
+    auto &data = m_objects.at(distance);
+    m_reset->setEnabled(data.eventsNumber != 0);
+  }
+}
+
+//-----------------------------------------------------------------------------
 void FilesystemWatcher::saveSettings()
 {
   QSettings settings("Felix de las Pozas Alvarez", "FilesystemWatcher");
 
   settings.setValue(GEOMETRY, saveGeometry());
   settings.sync();
-}
-
-//-----------------------------------------------------------------------------
-void FilesystemWatcher::onTabChanged(int index)
-{
-  m_addObject->setVisible(index == 0);
-  m_copy->setVisible(index == 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -198,9 +201,11 @@ void FilesystemWatcher::onAddObjectButtonClicked()
 
     thread->start();
 
-    objectsModel->addObject(obj);
+    objectsModel->addObject(obj, dialog.alarmColor());
 
     if(m_objects.size() == 1) updateTrayIcon();
+
+    m_removeObject->setEnabled(true);
   }
 }
 
@@ -276,11 +281,12 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
       return qObject.compare(QString::fromStdWString(o.path.wstring()), Qt::CaseInsensitive) == 0;
     }
   };
-  auto it = std::find_if(m_objects.cbegin(), m_objects.cend(), matchObj);
+  auto it = std::find_if(m_objects.begin(), m_objects.end(), matchObj);
 
-  if(it != m_objects.cend())
+  if(it != m_objects.end())
   {
-    const auto &data = *it;
+    auto &data = *it;
+    data.eventsNumber += 1;
 
     if((data.alarms & AlarmFlags::MESSAGE) != 0)
     {
@@ -333,9 +339,12 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
     if((data.alarms & (AlarmFlags::LIGHTS|AlarmFlags::SOUND)) != 0)
     {
       m_stopAction->setVisible(true);
-      m_stopButton->setVisible(true);
+      m_stopButton->setEnabled(true);
     }
   }
+
+  m_copy->setEnabled(true);
+  m_reset->setEnabled(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -354,6 +363,7 @@ void FilesystemWatcher::onRename(const std::wstring oldName, const std::wstring 
   {
     auto &data = *it;
     data.path = std::filesystem::path{newName};
+    data.eventsNumber += 1;
 
     // no need to alarm user because a rename also triggers an additional
     // modification event (modification of last modified time?) that will
@@ -398,5 +408,37 @@ void FilesystemWatcher::stopAlarms()
   }
 
   m_stopAction->setVisible(false);
-  m_stopButton->setVisible(false);
+  m_stopButton->setEnabled(false);
+}
+
+//-----------------------------------------------------------------------------
+void FilesystemWatcher::onResetButtonClicked()
+{
+  auto index = m_objectsTable->selectionModel()->currentIndex();
+  if(static_cast<unsigned int>(index.row()) < m_objects.size())
+  {
+    auto &data = m_objects.at(index.row());
+    data.eventsNumber = 0;
+
+    auto objectsModel = qobject_cast<ObjectsTableModel*>(m_objectsTable->model());
+    objectsModel->resetObject(data.path.wstring());
+
+    m_reset->setEnabled(false);
+  }
+}
+
+//-----------------------------------------------------------------------------
+void FilesystemWatcher::onRemoveButtonClicked()
+{
+  auto index = m_objectsTable->selectionModel()->currentIndex();
+  if(static_cast<unsigned int>(index.row()) < m_objects.size())
+  {
+    auto &data = m_objects.at(index.row());
+    auto objectsModel = qobject_cast<ObjectsTableModel*>(m_objectsTable->model());
+    objectsModel->removeObject(data.path.wstring());
+
+    m_objects.erase(m_objects.begin() + index.row());
+
+    m_reset->setEnabled(!m_objects.empty());
+  }
 }

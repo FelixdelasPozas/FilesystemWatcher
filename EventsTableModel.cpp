@@ -164,19 +164,19 @@ void EventsTableModel::copyEventsToClipboard()
     switch(p.second)
     {
       case WatchThread::Event::ADDED:
-        text.append("Added%1:");
+        text.append(tr("Added%1: ").arg(objectType));
         break;
       case WatchThread::Event::MODIFIED:
-        text.append("Modified%1:");
+        text.append(tr("Modified%1: ").arg(objectType));
         break;
       case WatchThread::Event::REMOVED:
-        text.append("Removed%1:");
+        text.append(tr("Removed%1: ").arg(objectType));
         break;
       case WatchThread::Event::RENAMED_OLD:
-        text.append("Renamed%1 from ");
+        text.append(tr("Renamed%1 from ").arg(objectType));
         break;
       case WatchThread::Event::RENAMED_NEW:
-        text.append("Renamed%1 to ");
+        text.append(tr("Renamed%1 to ").arg(objectType));
         break;
       default:
         break;

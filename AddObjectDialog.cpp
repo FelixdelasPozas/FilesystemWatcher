@@ -148,7 +148,7 @@ int AddObjectDialog::alarmVolume() const
 //-----------------------------------------------------------------------------
 QColor AddObjectDialog::alarmColor() const
 {
-  return m_color;
+  return m_color.isValid() ? m_color : QColor(255,255,255);
 }
 
 //-----------------------------------------------------------------------------
