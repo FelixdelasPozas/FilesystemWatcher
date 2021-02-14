@@ -34,6 +34,8 @@
 #include <QSoundEffect>
 #include <QTemporaryFile>
 
+#include <iostream>
+
 const QString GEOMETRY = "Geometry";
 
 Q_DECLARE_METATYPE(std::wstring);
@@ -167,10 +169,11 @@ void FilesystemWatcher::onAddObjectButtonClicked()
   if(QDialog::Accepted == dialog.exec())
   {
     const auto obj = dialog.objectPath();
+    const auto objectPath = std::filesystem::path(obj.toStdWString());
 
-    auto thread = new WatchThread(std::filesystem::path(obj.toStdWString()), dialog.objectProperties());
+    auto thread = new WatchThread(objectPath, dialog.objectProperties());
 
-    m_objects.emplace_back(obj.toStdWString(), dialog.objectAlarms(), dialog.alarmColor(), dialog.alarmVolume(), dialog.objectProperties(), thread);
+    m_objects.emplace_back(objectPath, dialog.objectAlarms(), dialog.alarmColor(), dialog.alarmVolume(), dialog.objectProperties(), thread);
 
     connect(thread, SIGNAL(error(const QString)),
             this,   SLOT(onWatcherError(const QString)));
@@ -178,13 +181,20 @@ void FilesystemWatcher::onAddObjectButtonClicked()
     connect(thread, SIGNAL(modified(const std::wstring, const WatchThread::Event)),
             this,   SLOT(onModification(const std::wstring, const WatchThread::Event)));
 
+    connect(thread, SIGNAL(renamed(const std::wstring, const std::wstring)),
+            this,   SLOT(onRename(const std::wstring, const std::wstring)));
+
     auto eventsModel = qobject_cast<EventsTableModel*>(m_eventsTable->model());
     connect(thread,      SIGNAL(modified(const std::wstring, const WatchThread::Event)),
             eventsModel, SLOT(modification(const std::wstring, const WatchThread::Event)));
+    connect(thread, SIGNAL(renamed(const std::wstring, const std::wstring)),
+            eventsModel, SLOT(rename(const std::wstring, const std::wstring)));
 
     auto objectsModel = qobject_cast<ObjectsTableModel*>(m_objectsTable->model());
     connect(thread,       SIGNAL(modified(const std::wstring, const WatchThread::Event)),
             objectsModel, SLOT(modification(const std::wstring, const WatchThread::Event)));
+    connect(thread, SIGNAL(renamed(const std::wstring, const std::wstring)),
+            objectsModel, SLOT(rename(const std::wstring, const std::wstring)));
 
     thread->start();
 
@@ -256,8 +266,15 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
 
   auto matchObj = [&qObject](const Object &o)
   {
-    auto obj = QString::fromStdWString(o.path);
-    return qObject.startsWith(obj);
+    auto obj = QString::fromStdWString(o.path.wstring());
+    if(std::filesystem::is_directory(o.path))
+    {
+      return qObject.startsWith(obj);
+    }
+    else
+    {
+      return qObject.compare(QString::fromStdWString(o.path.wstring()), Qt::CaseInsensitive) == 0;
+    }
   };
   auto it = std::find_if(m_objects.cbegin(), m_objects.cend(), matchObj);
 
@@ -269,20 +286,21 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
     {
       if(!isVisible())
       {
+        QString suffix = std::filesystem::is_directory(data.path) ? tr(" %1").arg(qObject) : tr("");
         QString message;
         switch(e)
         {
           case WatchThread::Event::ADDED:
-            message = tr("Added %1").arg(qObject);
+            message = tr("Added%1").arg(suffix);
             break;
           case WatchThread::Event::MODIFIED:
-            message = tr("Modified %1").arg(qObject);
+            message = tr("Modified%1").arg(suffix);
             break;
           case WatchThread::Event::REMOVED:
-            message = tr("Removed %1").arg(qObject);
+            message = tr("Removed%1").arg(suffix);
             break;
           case WatchThread::Event::RENAMED_NEW:
-            message = tr("Renamed object to %1").arg(qObject);
+            message = tr("Renamed a file to%1").arg(suffix);
             break;
           case WatchThread::Event::RENAMED_OLD:
           // no break
@@ -292,12 +310,12 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
 
         if(!message.isEmpty())
         {
-          m_trayIcon->showMessage(QString::fromStdWString(data.path), message, QIcon(":/FilesystemWatcher/eye-1.svg"), 1500);
+          m_trayIcon->showMessage(QString::fromStdWString(data.path.wstring()), message, QIcon(":/FilesystemWatcher/eye-1.svg"), 1500);
         }
       }
     }
 
-    if((data.alarms & AlarmFlags::SOUND) != 0)
+    if((data.alarms & AlarmFlags::SOUND) != 0 && !m_alarmSound)
     {
       m_alarmSound = new QSoundEffect(this);
       m_soundFile = QTemporaryFile::createLocalFile(":/FilesystemWatcher/Beeper.wav");
@@ -317,6 +335,29 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
       m_stopAction->setVisible(true);
       m_stopButton->setVisible(true);
     }
+  }
+}
+
+//-----------------------------------------------------------------------------
+void FilesystemWatcher::onRename(const std::wstring oldName, const std::wstring newName)
+{
+  auto qOldName = QString::fromStdWString(oldName);
+
+  auto findName = [&qOldName](Object &o)
+  {
+    const auto name = QString::fromStdWString(o.path.wstring());
+    return (name.compare(qOldName, Qt::CaseInsensitive) == 0);
+  };
+  auto it = std::find_if(m_objects.begin(), m_objects.end(), findName);
+
+  if(it != m_objects.end())
+  {
+    auto &data = *it;
+    data.path = std::filesystem::path{newName};
+
+    // no need to alarm user because a rename also triggers an additional
+    // modification event (modification of last modified time?) that will
+    // trigger the alarms.
   }
 }
 

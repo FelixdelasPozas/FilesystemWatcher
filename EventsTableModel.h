@@ -66,6 +66,14 @@ class EventsTableModel
      *
      */
     void modification(const std::wstring obj, const WatchThread::Event e);
+
+    /** \brief Updates the model data.
+     * \param[in] oldName Path of old object name.
+     * \param[in] newName Path of new object name.
+     *
+     */
+    void rename(const std::wstring oldName, const std::wstring newName);
+
   private:
     /** \brief Returns the text associated with the event.
      *

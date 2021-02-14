@@ -105,6 +105,13 @@ class FilesystemWatcher
      */
     void onModification(const std::wstring object, const WatchThread::Event e);
 
+    /** \brief Updates the internal data about the object and warns the user of an event.
+     * \param[in] oldName Object old name.
+     * \param[in] newName Object new name.
+     *
+     */
+    void onRename(const std::wstring oldName, const std::wstring newName);
+
     /** \brief Animates the tray icon.
      *
      */
@@ -118,18 +125,18 @@ class FilesystemWatcher
   private:
     struct Object
     {
-      const std::wstring  path;
-      const AlarmFlags    alarms;
-      const QColor        color;
-      unsigned char       volume;
-      const unsigned long properties;
-      WatchThread        *thread;
+      std::filesystem::path  path;   /** object path.                      */
+      const AlarmFlags       alarms; /** alarms for the user.              */
+      const QColor           color;  /** color for keyboard alarm.         */
+      unsigned char          volume; /** volume of sound alarm in [1-100]. */
+      const unsigned long    events; /** events to watch.                  */
+      WatchThread           *thread; /** watcher thread.                   */
 
       Object(const std::wstring &objectPath, const AlarmFlags alarmFlags,
              const QColor &lightsColor, const unsigned char alarmVolume,
-             const unsigned long watchProperties, WatchThread *t)
+             const unsigned long watchEvents, WatchThread *t)
       : path{objectPath}, alarms{alarmFlags}, color{lightsColor},
-        volume{alarmVolume}, properties{watchProperties}, thread{t}
+        volume{alarmVolume}, events{watchEvents}, thread{t}
         {};
     };
 

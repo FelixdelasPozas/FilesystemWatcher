@@ -129,7 +129,7 @@ void ObjectsTableModel::modification(const std::wstring obj, const WatchThread::
 {
   auto objText = QString::fromStdWString(obj);
 
-  auto matchObj = [&objText](std::tuple<const std::wstring, std::wstring, unsigned long> &p)
+  auto matchObj = [&objText](std::tuple<std::wstring, std::wstring, unsigned long> &p)
   {
     auto name = QString::fromStdWString(std::get<0>(p));
     return objText.startsWith(name);
@@ -143,9 +143,37 @@ void ObjectsTableModel::modification(const std::wstring obj, const WatchThread::
     std::get<2>(data) += 1;
 
     const auto distance = std::distance(m_data.begin(), it);
-    auto idx = index(distance, 1);
+    auto tl = index(distance, 1);
+    auto br = index(distance, 2);
 
-    emit dataChanged(idx, idx, { Qt::DisplayRole, Qt::BackgroundColorRole });
+    emit dataChanged(tl, br, { Qt::DisplayRole, Qt::BackgroundColorRole });
+  }
+}
+
+//-----------------------------------------------------------------------------
+void ObjectsTableModel::rename(const std::wstring oldName, const std::wstring newName)
+{
+  auto objText = QString::fromStdWString(oldName);
+
+  auto matchObj = [&objText](std::tuple<std::wstring, std::wstring, unsigned long> &p)
+  {
+    auto name = QString::fromStdWString(std::get<0>(p));
+    return objText.startsWith(name) || name.compare(objText, Qt::CaseInsensitive) == 0;
+  };
+  auto it = std::find_if(m_data.begin(), m_data.end(), matchObj);
+
+  if(it != m_data.end())
+  {
+    auto &data = *it;
+    std::get<0>(data) = newName;
+    std::get<1>(data) = eventText(WatchThread::Event::RENAMED_NEW).toStdWString();
+    std::get<2>(data) += 1;
+
+    const auto distance = std::distance(m_data.begin(), it);
+    auto tl = index(distance, 0);
+    auto br = index(distance, 2);
+
+    emit dataChanged(tl, br, { Qt::DisplayRole, Qt::BackgroundColorRole });
   }
 }
 

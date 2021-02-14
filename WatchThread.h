@@ -64,6 +64,7 @@ class WatchThread
     enum class Event: char { ADDED, REMOVED, MODIFIED, RENAMED_OLD, RENAMED_NEW };
 
   signals:
+    void renamed(const std::wstring oldName, const std::wstring newName);
     void modified(const std::wstring obj, const WatchThread::Event event);
     void error(const QString message);
 
@@ -98,10 +99,12 @@ class WatchThread
      */
     static QString getLastErrorString(const DWORD errorCode);
 
-    const std::filesystem::path m_object;      /** path of the object to watch.                            */
-    const unsigned long         m_events;      /** events to watch.                                        */
-    HANDLE                      m_stopHandle;  /** HANDLES to signal the thread to stop.                   */
-    bool                        m_isDirectory; /** True if the object is a directory, false if its a file. */
+    std::filesystem::path m_object;      /** path of the object to watch.                            */
+    const unsigned long   m_events;      /** events to watch.                                        */
+    HANDLE                m_stopHandle;  /** HANDLES to signal the thread to stop.                   */
+    bool                  m_isDirectory; /** True if the object is a directory, false if its a file. */
+    bool                  m_isRename;    /** True when a rename event is received with the old name
+                                             to signal that the next event will rename m_object.     */
 };
 
 #endif // WATCHTHREAD_H_

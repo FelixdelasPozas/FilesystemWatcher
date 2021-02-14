@@ -36,6 +36,7 @@ WatchThread::WatchThread(const std::filesystem::path &object, const unsigned lon
 , m_events{events}
 , m_stopHandle{0}
 , m_isDirectory{std::filesystem::is_directory(object)}
+, m_isRename{false}
 {
 }
 
@@ -127,9 +128,14 @@ void WatchThread::run()
 
             if((m_events & information->Action) != 0)
             {
+              const auto event = eventMapping.at(information->Action);
               if(std::filesystem::is_directory(m_object))
               {
-                emit modified(m_object.wstring() + L"\\" + changed_file_w, eventMapping.at(information->Action));
+                // this only emmits one renamed fora file in the directory.
+                if(event != Event::RENAMED_OLD)
+                {
+                  emit modified(m_object.wstring() + L"\\" + changed_file_w, event);
+                }
               }
               else
               {
@@ -138,9 +144,29 @@ void WatchThread::run()
                 auto changedFilename = changed_file_w;
                 std::for_each(changedFilename.begin(), changedFilename.end(), std::towlower);
 
-                if(changedFilename.compare(filename) == 0)
+                if(changedFilename.compare(filename) == 0 || m_isRename)
                 {
-                  emit modified(m_object.wstring(), eventMapping.at(information->Action));
+                  const Event event = eventMapping.at(information->Action);
+
+                  switch(event)
+                  {
+                    case Event::RENAMED_NEW:
+                      if(m_isRename)
+                      {
+                        const auto oldFilename = m_object.wstring();
+                        m_object = std::filesystem::path{m_object.parent_path().wstring() + L"\\" + changed_file_w};
+                        emit renamed(oldFilename, m_object.wstring());
+                        m_isRename = false;
+                      }
+                      break;
+                    case Event::RENAMED_OLD:
+                      // update m_object with the new name the next event.
+                      m_isRename = true;
+                      break;
+                    default:
+                      emit modified(m_object.wstring(), event);
+                      break;
+                  }
                 }
               }
             }

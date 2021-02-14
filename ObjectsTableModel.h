@@ -68,13 +68,20 @@ class ObjectsTableModel
      */
     void modification(const std::wstring obj, const WatchThread::Event e);
 
+    /** \brief Updates the model data.
+     * \param[in] oldName Path of old object name.
+     * \param[in] newName Path of new object name.
+     *
+     */
+    void rename(const std::wstring oldName, const std::wstring newName);
+
   private:
     /** \brief Returns the text associated with the event.
      *
      */
     QString eventText(const WatchThread::Event &e);
 
-    std::vector<std::tuple<const std::wstring, std::wstring, unsigned long>> m_data; /** model data. */
+    std::vector<std::tuple<std::wstring, std::wstring, unsigned long>> m_data; /** model data. */
 };
 
 #endif // OBJECTSTABLEMODEL_H_

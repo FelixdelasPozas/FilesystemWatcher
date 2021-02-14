@@ -135,6 +135,17 @@ void EventsTableModel::modification(const std::wstring obj, const WatchThread::E
 }
 
 //-----------------------------------------------------------------------------
+void EventsTableModel::rename(const std::wstring oldName, const std::wstring newName)
+{
+  beginInsertRows(QModelIndex(), m_data.size(), m_data.size() + 1);
+
+  m_data.emplace_back(oldName, WatchThread::Event::RENAMED_OLD);
+  m_data.emplace_back(newName, WatchThread::Event::RENAMED_NEW);
+
+  endInsertRows();
+}
+
+//-----------------------------------------------------------------------------
 void EventsTableModel::copyEventsToClipboard()
 {
   auto clipboard = QGuiApplication::clipboard();
