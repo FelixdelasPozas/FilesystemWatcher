@@ -178,7 +178,7 @@ void FilesystemWatcher::onAddObjectButtonClicked()
     const auto obj = dialog.objectPath();
     const auto objectPath = std::filesystem::path(obj.toStdWString());
 
-    auto thread = new WatchThread(objectPath, dialog.objectProperties());
+    auto thread = new WatchThread(objectPath, dialog.objectProperties(), dialog.isRecursive());
 
     m_objects.emplace_back(objectPath, dialog.objectAlarms(), dialog.alarmColor(), dialog.alarmVolume(), dialog.objectProperties(), thread);
 

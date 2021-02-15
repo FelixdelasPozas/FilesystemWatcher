@@ -232,8 +232,13 @@ void AddObjectDialog::updateEventsWidgets(bool isDirectory)
     checkBox->setChecked(true);
   }
 
-  m_createProp->setEnabled(isDirectory);
-  m_createProp->setChecked(isDirectory);
+  for(auto checkBox: {m_createProp, m_recursiveProp})
+  {
+    checkBox->setEnabled(isDirectory);
+    checkBox->setChecked(isDirectory);
+  }
+
+  if(isDirectory) m_recursiveProp->setChecked(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -251,4 +256,10 @@ void AddObjectDialog::onSoundVolumeChanged(int value)
 {
   m_sound->setVolume(static_cast<double>(value + 1)/100);
   if(!m_sound->isPlaying()) m_sound->play();
+}
+
+//-----------------------------------------------------------------------------
+bool AddObjectDialog::isRecursive() const
+{
+  return m_recursiveProp->isEnabled() && m_recursiveProp->isChecked();
 }

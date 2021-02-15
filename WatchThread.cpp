@@ -28,13 +28,14 @@
 #include <fileapi.h>
 
 //-----------------------------------------------------------------------------
-WatchThread::WatchThread(const std::filesystem::path &object, const unsigned long events, QObject *p)
+WatchThread::WatchThread(const std::filesystem::path &object, const unsigned long events, bool recursive, QObject *p)
 : QThread{p}
 , m_object(object)
 , m_events{events}
 , m_stopHandle{0}
 , m_isDirectory{std::filesystem::is_directory(object)}
 , m_isRename{false}
+, m_recursive{recursive}
 {
 }
 
@@ -89,7 +90,7 @@ void WatchThread::run()
     const auto result = ReadDirectoryChangesW(objectHandle,
                                               buffer.data(),
                                               static_cast<DWORD>(buffer.size()),
-                                              false,
+                                              m_recursive,
                                               watchProperties,
                                               0,
                                               &overlapped,

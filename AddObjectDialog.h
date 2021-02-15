@@ -85,6 +85,12 @@ class AddObjectDialog
      */
     QColor alarmColor() const;
 
+    /** \brief Returns true if the object is a subdirectory and the whole tree must be monitored,
+     * and false otherwise.
+     *
+     */
+    bool isRecursive() const;
+
   private slots:
     /** \brief Shows the dialog to select a filesystem file to watch.
      *

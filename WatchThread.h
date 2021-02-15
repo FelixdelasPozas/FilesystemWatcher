@@ -43,9 +43,10 @@ class WatchThread
      * \param[in] object Path of the object to watch.
      * \param[in] properties Events to watch.
      * \param[in] p Raw pointer of the object parent of this one.
+     * \param[in] recursive True to monitor the directory subtree, false to only monitor the directory files.
      *
      */
-    explicit WatchThread(const std::filesystem::path &object, const unsigned long events, QObject *p = nullptr);
+    explicit WatchThread(const std::filesystem::path &object, const unsigned long events, bool recursive = false, QObject *p = nullptr);
 
     /** \brief WatchThread class virtual destructor.
      *
@@ -105,6 +106,8 @@ class WatchThread
     bool                  m_isDirectory; /** True if the object is a directory, false if its a file. */
     bool                  m_isRename;    /** True when a rename event is received with the old name
                                              to signal that the next event will rename m_object.     */
+    bool                  m_recursive;   /** True to monitor the directory subtree and false to
+                                             monitor only the files in the directory.                */
 };
 
 #endif // WATCHTHREAD_H_

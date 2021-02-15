@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>298</height>
+    <height>320</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>400</width>
-    <height>298</height>
+    <height>320</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>400</width>
-    <height>298</height>
+    <height>320</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -76,7 +76,7 @@
    <item>
     <widget class="QGroupBox" name="m_propertiesGroup">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="styleSheet">
       <string notr="true">QGroupBox {
@@ -134,6 +134,16 @@ QGroupBox::title {
         </property>
         <property name="text">
          <string>Rename</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="m_recursiveProp">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Monitor subdirectory events</string>
         </property>
        </widget>
       </item>
