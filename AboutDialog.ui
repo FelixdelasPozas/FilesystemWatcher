@@ -298,7 +298,7 @@ Qt Framework</string>
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_10">
+             <widget class="QLabel" name="m_logitechVersion">
               <property name="text">
                <string>version 9.0</string>
               </property>

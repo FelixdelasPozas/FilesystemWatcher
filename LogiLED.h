@@ -74,8 +74,16 @@ class LogiLED
      */
     void stopLights();
 
+    /** \brief Returs true if the lights are being used to show an alarm, and false otherwise.
+     *
+     */
     bool isInUse()
     { return m_inUse; }
+
+    /** \brief Returns the version of the Logitech SDK used.
+     *
+     */
+    std::string version() const;
 
   private:
     /** \brief LogilLED class private constructor.

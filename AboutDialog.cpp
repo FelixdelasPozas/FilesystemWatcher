@@ -19,9 +19,11 @@
 
 // Project
 #include "AboutDialog.h"
+#include "LogiLED.h"
 
 // Qt
 #include <QtGlobal>
+
 
 const QString AboutDialog::VERSION = QString("version 1.0.0");
 
@@ -39,4 +41,5 @@ AboutDialog::AboutDialog(QWidget *parent, Qt::WindowFlags flags)
   m_compilationDate->setText(tr("Compiled on ") + compilation_date + compilation_time);
   m_version->setText(VERSION);
   m_qtVersion->setText(tr("version %1").arg(qVersion()));
+  m_logitechVersion->setText(tr("version %1").arg(QString::fromStdString(LogiLED::getInstance().version())));
 }

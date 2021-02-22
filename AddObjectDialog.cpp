@@ -28,14 +28,16 @@
 #include <QColorDialog>
 #include <QSoundEffect>
 #include <QTemporaryFile>
+#include <QFileInfo>
 
 // C++
 #include <minwindef.h>
 
 //-----------------------------------------------------------------------------
-AddObjectDialog::AddObjectDialog(QWidget *p, Qt::WindowFlags f)
+AddObjectDialog::AddObjectDialog(QDir &lastDir, QWidget *p, Qt::WindowFlags f)
 : QDialog(p,f)
 , m_color(255,255,255)
+, m_dir(lastDir)
 {
   setupUi(this);
 
@@ -77,7 +79,7 @@ void AddObjectDialog::connectSignals()
 //-----------------------------------------------------------------------------
 void AddObjectDialog::onAddFileClicked()
 {
-  auto filename = QFileDialog::getOpenFileName(this, tr("Select file to watch"), QDir::currentPath());
+  auto filename = QFileDialog::getOpenFileName(this, tr("Select file to watch"), m_dir.absolutePath());
 
   if(!filename.isEmpty())
   {
@@ -88,13 +90,15 @@ void AddObjectDialog::onAddFileClicked()
     m_propertiesGroup->setEnabled(true);
 
     updateEventsWidgets(false);
+
+    m_dir = QFileInfo{filename}.absoluteDir();
   }
 }
 
 //-----------------------------------------------------------------------------
 void AddObjectDialog::onAddFolderClicked()
 {
-  auto folder = QFileDialog::getExistingDirectory(this, tr("Select folder to watch"), QDir::currentPath());
+  auto folder = QFileDialog::getExistingDirectory(this, tr("Select folder to watch"), m_dir.absolutePath());
 
   if(!folder.isEmpty())
   {
@@ -105,6 +109,8 @@ void AddObjectDialog::onAddFolderClicked()
     m_propertiesGroup->setEnabled(true);
 
     updateEventsWidgets(true);
+
+    m_dir = QDir{folder}.absolutePath();
   }
 }
 

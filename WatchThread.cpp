@@ -127,47 +127,9 @@ void WatchThread::run()
 
             if((m_events & information->Action) != 0)
             {
-              const auto event = eventMapping.at(information->Action);
-              if(std::filesystem::is_directory(m_object))
-              {
-                // this only emmits one renamed fora file in the directory.
-                if(event != Event::RENAMED_OLD)
-                {
-                  emit modified(m_object.wstring() + L"\\" + changed_file_w, event);
-                }
-              }
-              else
-              {
-                auto filename = m_object.filename().wstring();
-                std::for_each(filename.begin(), filename.end(), std::towlower);
-                auto changedFilename = changed_file_w;
-                std::for_each(changedFilename.begin(), changedFilename.end(), std::towlower);
+              const Event event = eventMapping.at(information->Action);
 
-                if(changedFilename.compare(filename) == 0 || m_isRename)
-                {
-                  const Event event = eventMapping.at(information->Action);
-
-                  switch(event)
-                  {
-                    case Event::RENAMED_NEW:
-                      if(m_isRename)
-                      {
-                        const auto oldFilename = m_object.wstring();
-                        m_object = std::filesystem::path{m_object.parent_path().wstring() + L"\\" + changed_file_w};
-                        emit renamed(oldFilename, m_object.wstring());
-                        m_isRename = false;
-                      }
-                      break;
-                    case Event::RENAMED_OLD:
-                      // update m_object with the new name the next event.
-                      m_isRename = true;
-                      break;
-                    default:
-                      emit modified(m_object.wstring(), event);
-                      break;
-                  }
-                }
-              }
+              processEvent(changed_file_w, event);
             }
 
             if (information->NextEntryOffset == 0) break;
@@ -213,4 +175,54 @@ QString WatchThread::getLastErrorString(const DWORD errorCode)
   }
 
   return message;
+}
+
+//-----------------------------------------------------------------------------
+void WatchThread::processEvent(const std::wstring &name, const Event &e)
+{
+  if(std::filesystem::is_directory(m_object))
+  {
+    switch(e)
+    {
+      case Event::RENAMED_NEW:
+        emit renamed(m_oldName, m_object.wstring() + L"\\" + name);
+        break;
+      case Event::RENAMED_OLD:
+        m_oldName = m_object.wstring() + L"\\" + name;
+        break;
+      default:
+        emit modified(m_object.wstring() + L"\\" + name, e);
+        break;
+    }
+  }
+  else
+  {
+    auto filename = m_object.filename().wstring();
+    std::for_each(filename.begin(), filename.end(), std::towlower);
+    auto changedFilename = name;
+    std::for_each(changedFilename.begin(), changedFilename.end(), std::towlower);
+
+    if(changedFilename.compare(filename) == 0 || m_isRename)
+    {
+      switch(e)
+      {
+        case Event::RENAMED_NEW:
+          if(m_isRename)
+          {
+            const auto oldFilename = m_object.wstring();
+            m_object = std::filesystem::path{m_object.parent_path().wstring() + L"\\" + name};
+            emit renamed(oldFilename, m_object.wstring());
+            m_isRename = false;
+          }
+          break;
+        case Event::RENAMED_OLD:
+          // update m_object with the new name the next event.
+          m_isRename = true;
+          break;
+        default:
+          emit modified(m_object.wstring(), e);
+          break;
+      }
+    }
+  }
 }

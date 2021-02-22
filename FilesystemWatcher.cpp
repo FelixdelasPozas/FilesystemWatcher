@@ -20,7 +20,6 @@
 // Project
 #include "FilesystemWatcher.h"
 #include "AboutDialog.h"
-#include "EventsTableModel.h"
 #include "ObjectsTableModel.h"
 #include "LogiLED.h"
 
@@ -33,8 +32,16 @@
 #include <QTimer>
 #include <QSoundEffect>
 #include <QTemporaryFile>
+#include <QClipboard>
+#include <QGuiApplication>
+#include <QDateTime>
+#include <QTextBlock>
+
+// C++
+#include <atomic>
 
 const QString GEOMETRY = "Geometry";
+const QString LAST_DIRECTORY = "Last used directory";
 
 Q_DECLARE_METATYPE(std::wstring);
 Q_DECLARE_METATYPE(WatchThread::Event);
@@ -45,15 +52,14 @@ FilesystemWatcher::FilesystemWatcher(QWidget *p, Qt::WindowFlags f)
 , m_trayIcon{new QSystemTrayIcon(QIcon(":/FilesystemWatcher/eye-1.svg"), this)}
 , m_watching{false}
 , m_needsExit{false}
+, m_alarmSound{nullptr}
+, m_soundFile{nullptr}
+, m_lastDir{QDir::home()}
 {
   qRegisterMetaType<std::wstring>();
   qRegisterMetaType<WatchThread::Event>();
 
   setupUi(this);
-
-  m_eventsTable->setModel(new EventsTableModel());
-  m_eventsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeMode::Stretch);
-  m_eventsTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeMode::Stretch);
 
   m_objectsTable->setModel(new ObjectsTableModel());
   m_objectsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeMode::Stretch);
@@ -134,6 +140,9 @@ void FilesystemWatcher::setupTrayIcon()
   menu->addAction(quitAction);
 
   m_trayIcon->setContextMenu(menu);
+  m_trayIcon->setToolTip(tr("Ready to watch"));
+
+  connect(m_trayIcon, SIGNAL(messageClicked()), this, SLOT(showNormal()));
 }
 
 //-----------------------------------------------------------------------------
@@ -146,6 +155,18 @@ void FilesystemWatcher::loadSettings()
     auto geometry = settings.value(GEOMETRY).toByteArray();
     restoreGeometry(geometry);
   }
+
+  m_lastDir = QDir{settings.value(LAST_DIRECTORY, QDir::home().absolutePath()).toString()};
+}
+
+//-----------------------------------------------------------------------------
+void FilesystemWatcher::saveSettings()
+{
+  QSettings settings("Felix de las Pozas Alvarez", "FilesystemWatcher");
+
+  settings.setValue(GEOMETRY, saveGeometry());
+  settings.setValue(LAST_DIRECTORY, m_lastDir.absolutePath());
+  settings.sync();
 }
 
 //-----------------------------------------------------------------------------
@@ -160,18 +181,9 @@ void FilesystemWatcher::onObjectSelected(const QModelIndex &selected, const QMod
 }
 
 //-----------------------------------------------------------------------------
-void FilesystemWatcher::saveSettings()
-{
-  QSettings settings("Felix de las Pozas Alvarez", "FilesystemWatcher");
-
-  settings.setValue(GEOMETRY, saveGeometry());
-  settings.sync();
-}
-
-//-----------------------------------------------------------------------------
 void FilesystemWatcher::onAddObjectButtonClicked()
 {
-  AddObjectDialog dialog(this);
+  AddObjectDialog dialog(m_lastDir, this);
 
   if(QDialog::Accepted == dialog.exec())
   {
@@ -191,12 +203,6 @@ void FilesystemWatcher::onAddObjectButtonClicked()
     connect(thread, SIGNAL(renamed(const std::wstring, const std::wstring)),
             this,   SLOT(onRename(const std::wstring, const std::wstring)));
 
-    auto eventsModel = qobject_cast<EventsTableModel*>(m_eventsTable->model());
-    connect(thread,      SIGNAL(modified(const std::wstring, const WatchThread::Event)),
-            eventsModel, SLOT(modification(const std::wstring, const WatchThread::Event)));
-    connect(thread, SIGNAL(renamed(const std::wstring, const std::wstring)),
-            eventsModel, SLOT(rename(const std::wstring, const std::wstring)));
-
     auto objectsModel = qobject_cast<ObjectsTableModel*>(m_objectsTable->model());
     connect(thread,       SIGNAL(modified(const std::wstring, const WatchThread::Event)),
             objectsModel, SLOT(modification(const std::wstring, const WatchThread::Event)));
@@ -207,17 +213,21 @@ void FilesystemWatcher::onAddObjectButtonClicked()
 
     objectsModel->addObject(obj, dialog.alarmColor());
 
-    if(m_objects.size() == 1) updateTrayIcon();
+    const auto objectsNum = m_objects.size();
+
+    if(objectsNum == 1) updateTrayIcon();
 
     m_removeObject->setEnabled(true);
+
+    m_trayIcon->setToolTip(tr("Watching %1 object%2").arg(objectsNum).arg(objectsNum > 1 ? "s":""));
   }
 }
 
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::onCopyButtonClicked()
 {
-  auto eventModel = qobject_cast<EventsTableModel *>(m_eventsTable->model());
-  eventModel->copyEventsToClipboard();
+  auto clipboard = QGuiApplication::clipboard();
+  clipboard->setText(m_log->document()->toPlainText());
 }
 
 //-----------------------------------------------------------------------------
@@ -232,8 +242,6 @@ void FilesystemWatcher::quitApplication()
 {
   m_needsExit = true;
   close();
-
-  QApplication::quit();
 }
 
 //-----------------------------------------------------------------------------
@@ -259,6 +267,7 @@ void FilesystemWatcher::closeEvent(QCloseEvent *e)
   else
   {
     QDialog::closeEvent(e);
+    QApplication::quit();
   }
 }
 
@@ -292,40 +301,7 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
     auto &data = *it;
     data.eventsNumber += 1;
 
-    if((data.alarms & AlarmFlags::MESSAGE) != 0)
-    {
-      if(!isVisible())
-      {
-        QString suffix = std::filesystem::is_directory(data.path) ? tr(" %1").arg(qObject) : tr("");
-        QString message;
-        switch(e)
-        {
-          case WatchThread::Event::ADDED:
-            message = tr("Added%1").arg(suffix);
-            break;
-          case WatchThread::Event::MODIFIED:
-            message = tr("Modified%1").arg(suffix);
-            break;
-          case WatchThread::Event::REMOVED:
-            message = tr("Removed%1").arg(suffix);
-            break;
-          case WatchThread::Event::RENAMED_NEW:
-            message = tr("Renamed a file to%1").arg(suffix);
-            break;
-          case WatchThread::Event::RENAMED_OLD:
-          // no break
-          default:
-            break;
-        }
-
-        if(!message.isEmpty())
-        {
-          m_trayIcon->showMessage(QString::fromStdWString(data.path.wstring()), message, QIcon(":/FilesystemWatcher/eye-1.svg"), 1500);
-        }
-      }
-    }
-
-    if((data.alarms & AlarmFlags::SOUND) != 0 && !m_alarmSound)
+    if((data.alarms & AlarmFlags::SOUND) != 0 && !m_alarmSound && !m_soundFile)
     {
       m_alarmSound = new QSoundEffect(this);
       m_soundFile = QTemporaryFile::createLocalFile(":/FilesystemWatcher/Beeper.wav");
@@ -344,6 +320,51 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
     {
       m_stopAction->setVisible(true);
       m_stopButton->setEnabled(true);
+    }
+
+    QString suffix = tr(" <b>'%1'</b>.").arg(qObject);
+    QString message;
+    switch(e)
+    {
+      case WatchThread::Event::ADDED:
+        message = tr("Added %2").arg(suffix);
+        break;
+      case WatchThread::Event::MODIFIED:
+        message = tr("Modified %2").arg(suffix);
+        break;
+      case WatchThread::Event::REMOVED:
+        message = tr("Removed %2").arg(suffix);
+        break;
+      case WatchThread::Event::RENAMED_NEW:
+        message = tr("Renamed a file to %2").arg(suffix);
+        break;
+      case WatchThread::Event::RENAMED_OLD:
+      // no break
+      default:
+        break;
+    }
+
+    if(!message.isEmpty())
+    {
+      log(message);
+
+      if((data.alarms & AlarmFlags::MESSAGE) != 0)
+      {
+        const auto title = QString::fromStdWString(data.path.wstring());
+        const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
+        if(isVisible())
+        {
+          if(showMessage(title, message))
+          {
+            stopAlarms();
+          }
+        }
+        else
+        {
+          message.remove("<b>").remove("</b>");
+          m_trayIcon->showMessage(title, message, icon, 1500);
+        }
+      }
     }
   }
 
@@ -372,6 +393,27 @@ void FilesystemWatcher::onRename(const std::wstring oldName, const std::wstring 
     // no need to alarm user because a rename also triggers an additional
     // modification event (modification of last modified time?) that will
     // trigger the alarms.
+
+    auto message = tr("File <b>'%2'</b> renamed to <b>'%3'</b>.").arg(QString::fromStdWString(oldName)).arg(QString::fromStdWString(newName));
+    log(message);
+
+    if((data.alarms & AlarmFlags::MESSAGE) != 0)
+    {
+      const auto title = QString::fromStdWString(data.path.wstring());
+      const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
+      if(isVisible())
+      {
+        if(showMessage(title, message))
+        {
+          stopAlarms();
+        }
+      }
+      else
+      {
+        message.remove("<b>").remove("</b>");
+        m_trayIcon->showMessage(title, message, icon, 1500);
+      }
+    }
   }
 }
 
@@ -383,36 +425,42 @@ void FilesystemWatcher::updateTrayIcon()
 
   static int index = 0;
 
-  index = (index + 1) % FRAMES.size();
-
-  if(m_trayIcon->isVisible())
+  if(m_objects.empty())
   {
-    m_trayIcon->setIcon(FRAMES.at(index));
+    index = 0;
   }
   else
   {
-    setWindowIcon(FRAMES.at(index));
+    index = (index + 1) % FRAMES.size();
+    if(!m_needsExit) QTimer::singleShot(1000, this, SLOT(updateTrayIcon()));
   }
 
-  if(!m_objects.empty()) QTimer::singleShot(1000, this, SLOT(updateTrayIcon()));
+  m_trayIcon->setIcon(FRAMES.at(index));
+  setWindowIcon(FRAMES.at(index));
 }
 
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::stopAlarms()
 {
-  if(LogiLED::getInstance().isInUse()) LogiLED::getInstance().stopLights();
+  static std::atomic<bool> inUse = false;
 
-  if(m_alarmSound)
+  if(!inUse.exchange(true))
   {
-    m_alarmSound->stop();
-    delete m_alarmSound;
-    m_alarmSound = nullptr;
-    delete m_soundFile;
-    m_soundFile = nullptr;
-  }
+    if(LogiLED::getInstance().isInUse()) LogiLED::getInstance().stopLights();
+    if(m_alarmSound && m_soundFile)
+    {
+      m_alarmSound->stop();
+      delete m_alarmSound;
+      m_alarmSound = nullptr;
+      delete m_soundFile;
+      m_soundFile = nullptr;
+    }
 
-  m_stopAction->setVisible(false);
-  m_stopButton->setEnabled(false);
+    m_stopAction->setVisible(false);
+    m_stopButton->setEnabled(false);
+
+    inUse = false;
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -443,7 +491,18 @@ void FilesystemWatcher::onRemoveButtonClicked()
 
     m_objects.erase(m_objects.begin() + index.row());
 
-    m_removeObject->setEnabled(!m_objects.empty());
+    const auto objectsNum = m_objects.size();
+
+    m_removeObject->setEnabled(objectsNum == 0);
+
+    if(objectsNum == 0)
+    {
+      m_trayIcon->setToolTip(tr("Ready to watch"));
+    }
+    else
+    {
+      m_trayIcon->setToolTip(tr("Watching %1 object%2").arg(objectsNum).arg(objectsNum > 1 ? "s":""));
+    }
   }
 }
 
@@ -476,4 +535,34 @@ void FilesystemWatcher::onCustomMenuRequested(const QPoint &p)
       onResetButtonClicked();
     }
   }
+}
+
+//-----------------------------------------------------------------------------
+void FilesystemWatcher::log(const QString &message)
+{
+  const auto prefix = QDateTime::currentDateTime().toString("hh:mm:ss");
+  m_log->append(tr("%1 - %2").arg(prefix).arg(message));
+}
+
+//-----------------------------------------------------------------------------
+bool FilesystemWatcher::showMessage(const QString title, const QString message)
+{
+  static std::atomic<bool> inUse = false;
+
+  if(!inUse.exchange(true))
+  {
+    inUse = true;
+    const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
+    QMessageBox msgBox(this);
+    msgBox.setWindowIcon(icon);
+    msgBox.setWindowTitle(title);
+    msgBox.setText(message);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+    msgBox.exec();
+
+    inUse = false;
+    return true;
+  }
+
+  return false;
 }

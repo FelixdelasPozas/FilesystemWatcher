@@ -48,6 +48,7 @@ int main(int argc, char **argv)
   qInstallMessageHandler(myMessageOutput);
 
   QApplication app(argc, argv);
+  app.setQuitOnLastWindowClosed(false);
 
   // allow only one instance running
   QSharedMemory guard;
@@ -66,8 +67,12 @@ int main(int argc, char **argv)
     return 0;
   }
 
-  FilesystemWatcher watcher;
-  watcher.show();
+  auto watcher = new FilesystemWatcher();
+  watcher->showNormal();
 
-  return app.exec();
+  auto returnVal = app.exec();
+
+  delete watcher;
+
+  return returnVal;
 }

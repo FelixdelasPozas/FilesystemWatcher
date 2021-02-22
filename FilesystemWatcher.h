@@ -178,6 +178,19 @@ class FilesystemWatcher
      */
     void saveSettings();
 
+    /** \brief Writes the given message to the log tab.
+     * \param[in] message Text message.
+     *
+     */
+    void log(const QString &message);
+
+    /** \brief Shows an alarm message to the user. Returns true if is able to show the message and false otherwise.
+     * \param[in] title Window title.
+     * \param[in] message Text message.
+     *
+     */
+    bool showMessage(const QString title, const QString message);
+
     QSystemTrayIcon    *m_trayIcon;   /** tray icon.                                      */
     bool                m_watching;   /** true if watching and false otherwise.           */
     bool                m_needsExit;  /** true to close the application, false otherwise. */
@@ -185,6 +198,7 @@ class FilesystemWatcher
     QAction            *m_stopAction; /** stop alarms tray menu action.                   */
     QSoundEffect       *m_alarmSound; /** alarm sound.                                    */
     QTemporaryFile     *m_soundFile;  /** temporary file for alarm wav file.              */
+    QDir                m_lastDir;    /** last opened dir to select objects.              */
 };
 
 #endif // FILESYSTEMWATCHER_H_

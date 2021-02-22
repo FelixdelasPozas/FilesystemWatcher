@@ -98,3 +98,11 @@ void LogiLED::restart()
   }
 }
 
+//--------------------------------------------------------------------
+std::string LogiLED::version() const
+{
+  int major, minor, build;
+  LogiLedGetSdkVersion(&major, &minor, &build);
+
+  return std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(build);
+}

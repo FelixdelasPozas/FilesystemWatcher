@@ -73,26 +73,50 @@ class WatchThread
     virtual void run() override;
 
   private:
-    /** maps the changes with the corresponding event. */
+    /** Maps the changes with the corresponding event.
+     *
+     *  From https://docs.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-file_notify_information                 */
     const std::map<DWORD, Event> eventMapping =
     {
-      { FILE_ACTION_ADDED,            Event::ADDED },
-      { FILE_ACTION_REMOVED,          Event::REMOVED },
-      { FILE_ACTION_MODIFIED,         Event::MODIFIED },
-      { FILE_ACTION_RENAMED_OLD_NAME, Event::RENAMED_OLD },
-      { FILE_ACTION_RENAMED_NEW_NAME, Event::RENAMED_NEW }
+      { FILE_ACTION_ADDED,            Event::ADDED },        /** The file was added to the directory.                  */
+      { FILE_ACTION_REMOVED,          Event::REMOVED },      /** The file was removed from the directory.              */
+      { FILE_ACTION_MODIFIED,         Event::MODIFIED },     /** The file was modified. This can be a change in the
+                                                                 time stamp or attributes.                             */
+      { FILE_ACTION_RENAMED_OLD_NAME, Event::RENAMED_OLD },  /** The file was renamed and this is the old name.        */
+      { FILE_ACTION_RENAMED_NEW_NAME, Event::RENAMED_NEW }   /** The file was renamed and this is the new name.        */
     };
 
-    /** properties to watch on the object. */
+    /** Properties to watch on a file or directory object. Only last access and creation applies to a directory. The
+     * rest applies for both.
+     *
+     * From https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-readdirectorychangesw
+     * Retrieves information that describes the changes within the specified directory. The function does not report
+     * changes to the specified directory itself.                                                                      */
     const DWORD watchProperties =
-      FILE_NOTIFY_CHANGE_SECURITY    |
-      FILE_NOTIFY_CHANGE_CREATION    |
-      FILE_NOTIFY_CHANGE_LAST_ACCESS |
-      FILE_NOTIFY_CHANGE_LAST_WRITE  |
-      FILE_NOTIFY_CHANGE_SIZE        |
-      FILE_NOTIFY_CHANGE_ATTRIBUTES  |
-      FILE_NOTIFY_CHANGE_DIR_NAME    |
-      FILE_NOTIFY_CHANGE_FILE_NAME;
+      FILE_NOTIFY_CHANGE_FILE_NAME   |/** Any file name change in the watched directory or subtree causes a change
+                                        *  notification wait operation to return. Changes include renaming, creating,
+                                        *  or deleting a file.                                                         */
+      FILE_NOTIFY_CHANGE_DIR_NAME    | /** Any directory-name change in the watched directory or subtree causes a
+                                        *  change notification wait operation to return. Changes include creating or
+                                        *  deleting a directory.                                                       */
+      FILE_NOTIFY_CHANGE_ATTRIBUTES  | /** Any attribute change in the watched directory or subtree causes a change
+                                        *  notification wait operation to return.                                      */
+      FILE_NOTIFY_CHANGE_SIZE        | /** Any file-size change in the watched directory or subtree causes a change
+                                        *  notification wait operation to return. The operating system detects a change
+                                        *  in file size only when the file is written to the disk. For operating systems
+                                        *  that use extensive caching, detection occurs only when the cache is
+                                        *  sufficiently flushed.                                                       */
+      FILE_NOTIFY_CHANGE_LAST_WRITE  | /** Any change to the last write-time of files in the watched directory or
+                                        *  subtree causes a change notification wait operation to return. The operating
+                                        *  system detects a change to the last write-time only when the file is written
+                                        *  to the disk. For operating systems that use extensive caching, detection
+                                        *  occurs only when the cache is sufficiently flushed.                         */
+      FILE_NOTIFY_CHANGE_LAST_ACCESS | /** Any change to the last access time of files in the watched directory or
+                                        *  subtree causes a change notification wait operation to return.              */
+      FILE_NOTIFY_CHANGE_CREATION    | /** Any change to the creation time of files in the watched directory or
+                                        *  subtree causes a change notification wait operation to return.              */
+      FILE_NOTIFY_CHANGE_SECURITY;     /** Any security-descriptor change in the watched directory or subtree causes a
+                                        *  change notification wait operation to return.                               */
 
     /** \brief Helper method to get the string of the given Win32 API error.
      * \param[in] errorCode Win32 API error code.
@@ -100,10 +124,18 @@ class WatchThread
      */
     static QString getLastErrorString(const DWORD errorCode);
 
+    /** \brief Processes the event for the 'name' object.
+     * \param[in] name Name given in the event information struct.
+     * \param[in] e Event.
+     *
+     */
+    void processEvent(const std::wstring &name, const Event &e);
+
     std::filesystem::path m_object;      /** path of the object to watch.                            */
     const unsigned long   m_events;      /** events to watch.                                        */
     HANDLE                m_stopHandle;  /** HANDLES to signal the thread to stop.                   */
     bool                  m_isDirectory; /** True if the object is a directory, false if its a file. */
+    std::wstring          m_oldName;     /** old name in case of a rename event.                     */
     bool                  m_isRename;    /** True when a rename event is received with the old name
                                              to signal that the next event will rename m_object.     */
     bool                  m_recursive;   /** True to monitor the directory subtree and false to

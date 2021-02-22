@@ -19,6 +19,7 @@
 
 // Project
 #include "ObjectsTableModel.h"
+#include "LogiLED.h"
 
 // Qt
 #include <QString>
@@ -56,6 +57,7 @@ int ObjectsTableModel::rowCount(const QModelIndex &parent) const
 //-----------------------------------------------------------------------------
 int ObjectsTableModel::columnCount(const QModelIndex &parent) const
 {
+  if(LogiLED::isAvailable()) return 4;
   return 3;
 }
 
@@ -81,6 +83,9 @@ QVariant ObjectsTableModel::data(const QModelIndex &index, int role) const
             break;
           case 2:
             return QString::number(std::get<2>(m_data.at(index.row())));
+          case 3:
+            return tr(" ");
+            break;
           default:
             break;
         }
@@ -88,7 +93,7 @@ QVariant ObjectsTableModel::data(const QModelIndex &index, int role) const
       case Qt::BackgroundRole:
         switch(index.column())
         {
-          case 0:
+          case 3:
             return std::get<3>(m_data.at(index.row()));
             break;
           case 1:
@@ -99,6 +104,16 @@ QVariant ObjectsTableModel::data(const QModelIndex &index, int role) const
             break;
         }
         break;
+      case Qt::TextAlignmentRole:
+        switch(index.column())
+        {
+          case 0:
+          case 3:
+            break;
+          default:
+            return Qt::AlignCenter;
+        }
+
       default:
         break;
     }
@@ -123,6 +138,8 @@ QVariant ObjectsTableModel::headerData(int section, Qt::Orientation orientation,
       case 2:
         return tr("Nº of Events");
         break;
+      case 3:
+        return tr("Color");
       default:
         break;
     }
@@ -232,6 +249,7 @@ void ObjectsTableModel::resetObject(const std::wstring &obj)
   if(it != m_data.end())
   {
     auto &data = *it;
+    std::get<1>(data) = std::wstring();
     std::get<2>(data) = 0;
 
     const auto distance = std::distance(m_data.begin(), it);

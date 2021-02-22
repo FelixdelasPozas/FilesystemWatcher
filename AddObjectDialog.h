@@ -24,6 +24,7 @@
 
 // Qt
 #include <QDialog>
+#include <QDir>
 
 class QSoundEffect;
 class QTemporaryFile;
@@ -49,11 +50,12 @@ class AddObjectDialog
     Q_OBJECT
   public:
     /** \brief AddObjectDialog class constructor.
+     * \param[in] lastDir Last used directory for opening objects.
      * \param[in] p Raw pointer of the object parent of this one.
      * \param[in] f Dialog flags.
      *
      */
-    explicit AddObjectDialog(QWidget *p = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit AddObjectDialog(QDir &lastDir, QWidget *p = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 
     /** \brief AddObjectDialog class virtual destructor.
      *
@@ -161,6 +163,7 @@ class AddObjectDialog
     QColor          m_color;     /** keyboard lights color.    */
     QSoundEffect   *m_sound;     /** sound class.              */
     QTemporaryFile *m_soundFile; /** wave file temporary file. */
+    QDir           &m_dir;       /** last opened dir.          */
 };
 
 #endif // ADDOBJECTDIALOG_H_
