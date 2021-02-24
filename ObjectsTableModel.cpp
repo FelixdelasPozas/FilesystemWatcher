@@ -84,6 +84,10 @@ QVariant ObjectsTableModel::data(const QModelIndex &index, int role) const
           case 2:
             return QString::number(std::get<2>(m_data.at(index.row())));
           case 3:
+            {
+              const auto color = std::get<3>(m_data.at(index.row()));
+              if(!color.isValid()) return tr("None");
+            }
             return tr(" ");
             break;
           default:
@@ -94,7 +98,10 @@ QVariant ObjectsTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
           case 3:
-            return std::get<3>(m_data.at(index.row()));
+            {
+              const auto color = std::get<3>(m_data.at(index.row()));
+              if(color.isValid()) return color;
+            }
             break;
           case 1:
             {
@@ -108,7 +115,6 @@ QVariant ObjectsTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
           case 0:
-          case 3:
             break;
           default:
             return Qt::AlignCenter;

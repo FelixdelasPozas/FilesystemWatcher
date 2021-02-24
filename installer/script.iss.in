@@ -1,14 +1,14 @@
 ; Mingw64 Distribution Inno Setup File
 
 [Setup]
-AppName=MultiAlarm
+AppName=Filesystem Watcher
 AppVersion=@FILESYSTEM_WATCHER_VERSION_MAJOR@.@FILESYSTEM_WATCHER_VERSION_MINOR@.@FILESYSTEM_WATCHER_VERSION_PATCH@
 DefaultDirName={pf64}\FilesystemWatcher
 DefaultGroupName=Filesystem Watcher
 OutputDir=@PROJECT_BINARY_DIR@
 AppComments=Filesystem Watcher
 AppContact=Felix de las Pozas Alvarez
-AppCopyright=(c)2021 Felix de las Pozas Alvarez
+AppCopyright=(c)@CURRENT_YEAR@ Felix de las Pozas Alvarez
 AppPublisher=Felix de las Pozas Alvarez
 ArchitecturesAllowed=x64
 Compression=lzma2/ultra64
@@ -19,7 +19,7 @@ DisableWelcomePage=no
 ChangesAssociations=no
 CloseApplications=yes
 UninstallDisplayIcon=@CMAKE_SOURCE_DIR@/rsc/application.ico
-UninstallDisplayName=MultiAlarm v@FILESYSTEM_WATCHER_VERSION_MAJOR@.@FILESYSTEM_WATCHER_VERSION_MINOR@.@FILESYSTEM_WATCHER_VERSION_PATCH@
+UninstallDisplayName=Filesystem Watcher v@FILESYSTEM_WATCHER_VERSION_MAJOR@.@FILESYSTEM_WATCHER_VERSION_MINOR@.@FILESYSTEM_WATCHER_VERSION_PATCH@
 SourceDir=@PROJECT_BINARY_DIR@
 SetupIconFile=@CMAKE_SOURCE_DIR@/rsc/application.ico
 OutputBaseFilename=FilesystemWatcher_v@FILESYSTEM_WATCHER_VERSION_MAJOR@.@FILESYSTEM_WATCHER_VERSION_MINOR@.@FILESYSTEM_WATCHER_VERSION_PATCH@_Setup

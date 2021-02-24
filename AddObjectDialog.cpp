@@ -32,11 +32,12 @@
 
 // C++
 #include <minwindef.h>
+#include <cstdlib>
 
 //-----------------------------------------------------------------------------
 AddObjectDialog::AddObjectDialog(QDir &lastDir, QWidget *p, Qt::WindowFlags f)
 : QDialog(p,f)
-, m_color(255,255,255)
+, m_color(rand() % 256, rand() % 256, rand() % 256)
 , m_dir(lastDir)
 {
   setupUi(this);
@@ -154,7 +155,7 @@ int AddObjectDialog::alarmVolume() const
 //-----------------------------------------------------------------------------
 QColor AddObjectDialog::alarmColor() const
 {
-  return m_color.isValid() ? m_color : QColor(255,255,255);
+  return m_useKeyboardLights->isChecked() ? m_color : QColor();
 }
 
 //-----------------------------------------------------------------------------

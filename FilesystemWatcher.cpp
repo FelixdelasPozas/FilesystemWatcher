@@ -313,6 +313,7 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
 
     if((data.alarms & AlarmFlags::LIGHTS) != 0)
     {
+      if(!data.color.isValid()) data.color = QColor(255,255,255);
       LogiLED::getInstance().setColor(data.color.red(), data.color.green(), data.color.blue());
     }
 
