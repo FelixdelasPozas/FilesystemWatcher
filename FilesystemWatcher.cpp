@@ -494,7 +494,7 @@ void FilesystemWatcher::onRemoveButtonClicked()
 
     const auto objectsNum = m_objects.size();
 
-    m_removeObject->setEnabled(objectsNum == 0);
+    m_removeObject->setEnabled(objectsNum != 0);
 
     if(objectsNum == 0)
     {
