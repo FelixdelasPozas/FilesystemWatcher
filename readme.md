@@ -40,7 +40,7 @@ Add object dialog. The option to use keyboard lights as an alarm will only be av
 ![Add object dialog](https://user-images.githubusercontent.com/12167134/109077833-0b1a2b80-76fd-11eb-90cf-f80727e7a155.png)
 
 # Repository information
-**Version**: 1.0.0
+**Version**: 1.0.1
 
 **Status**: finished
 
