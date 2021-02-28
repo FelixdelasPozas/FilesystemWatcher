@@ -160,6 +160,11 @@ class AddObjectDialog
      */
     void createSoundFile();
 
+    /** \brief Helper method to generate a random color for the keyboard lights.
+     *
+     */
+    void generateRandomColor();
+
     QColor          m_color;     /** keyboard lights color.    */
     QSoundEffect   *m_sound;     /** sound class.              */
     QTemporaryFile *m_soundFile; /** wave file temporary file. */

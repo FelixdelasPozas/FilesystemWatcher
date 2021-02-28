@@ -33,24 +33,27 @@
 // C++
 #include <minwindef.h>
 #include <cstdlib>
+#include <time.h>
 
 //-----------------------------------------------------------------------------
 AddObjectDialog::AddObjectDialog(QDir &lastDir, QWidget *p, Qt::WindowFlags f)
 : QDialog(p,f)
-, m_color(rand() % 256, rand() % 256, rand() % 256)
 , m_dir(lastDir)
 {
   setupUi(this);
 
   connectSignals();
 
-  updateColorButton();
-
   createSoundFile();
 
   if(!LogiLED::isAvailable())
   {
     m_useKeyboardLights->setEnabled(false);
+  }
+  else
+  {
+    generateRandomColor();
+    updateColorButton();
   }
 }
 
@@ -162,6 +165,10 @@ QColor AddObjectDialog::alarmColor() const
 void AddObjectDialog::onColorButtonClicked()
 {
   QColorDialog dialog(this);
+  dialog.setCurrentColor(m_color);
+  dialog.setWindowIcon(QIcon(":/FilesystemWatcher/eye-1.svg"));
+  dialog.setWindowTitle(tr("Select keyboard lights color"));
+  dialog.setModal(true);
 
   connect(&dialog, SIGNAL(currentColorChanged(const QColor &)), this, SLOT(setKeyboardColor(const QColor &)));
 
@@ -269,4 +276,11 @@ void AddObjectDialog::onSoundVolumeChanged(int value)
 bool AddObjectDialog::isRecursive() const
 {
   return m_recursiveProp->isEnabled() && m_recursiveProp->isChecked();
+}
+
+//-----------------------------------------------------------------------------
+void AddObjectDialog::generateRandomColor()
+{
+  srand(time(nullptr));
+  m_color = QColor::fromHsv(rand() % 360, 255, 255).toRgb();
 }

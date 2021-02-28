@@ -5,7 +5,7 @@ cmake_minimum_required (VERSION 2.8.6)
 # Version Number
 set (FILESYSTEM_WATCHER_VERSION_MAJOR 1)
 set (FILESYSTEM_WATCHER_VERSION_MINOR 0)
-set (FILESYSTEM_WATCHER_VERSION_PATCH 1)
+set (FILESYSTEM_WATCHER_VERSION_PATCH 2)
 
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
