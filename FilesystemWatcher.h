@@ -191,14 +191,15 @@ class FilesystemWatcher
      */
     bool showMessage(const QString title, const QString message);
 
-    QSystemTrayIcon    *m_trayIcon;   /** tray icon.                                      */
-    bool                m_watching;   /** true if watching and false otherwise.           */
-    bool                m_needsExit;  /** true to close the application, false otherwise. */
-    std::vector<Object> m_objects;    /** list of watched objects.                        */
-    QAction            *m_stopAction; /** stop alarms tray menu action.                   */
-    QSoundEffect       *m_alarmSound; /** alarm sound.                                    */
-    QTemporaryFile     *m_soundFile;  /** temporary file for alarm wav file.              */
-    QDir                m_lastDir;    /** last opened dir to select objects.              */
+    QSystemTrayIcon    *m_trayIcon;    /** tray icon.                                      */
+    bool                m_watching;    /** true if watching and false otherwise.           */
+    bool                m_needsExit;   /** true to close the application, false otherwise. */
+    std::vector<Object> m_objects;     /** list of watched objects.                        */
+    QAction            *m_stopAction;  /** stop alarms tray menu action.                   */
+    QSoundEffect       *m_alarmSound;  /** alarm sound.                                    */
+    QTemporaryFile     *m_soundFile;   /** temporary file for alarm wav file.              */
+    QDir                m_lastDir;     /** last opened dir to select objects.              */
+    int                 m_alarmVolume; /** volume of the sound alarm.                      */
 };
 
 #endif // FILESYSTEMWATCHER_H_

@@ -51,11 +51,12 @@ class AddObjectDialog
   public:
     /** \brief AddObjectDialog class constructor.
      * \param[in] lastDir Last used directory for opening objects.
+     * \param[in] alarmVolume Default volume of the sound alarm.
      * \param[in] p Raw pointer of the object parent of this one.
      * \param[in] f Dialog flags.
      *
      */
-    explicit AddObjectDialog(QDir &lastDir, QWidget *p = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit AddObjectDialog(QDir &lastDir, const int alarmVolume, QWidget *p = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 
     /** \brief AddObjectDialog class virtual destructor.
      *

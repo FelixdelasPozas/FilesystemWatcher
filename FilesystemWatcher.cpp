@@ -42,6 +42,7 @@
 
 const QString GEOMETRY = "Geometry";
 const QString LAST_DIRECTORY = "Last used directory";
+const QString ALARM_VOLUME = "Alarm volume";
 
 Q_DECLARE_METATYPE(std::wstring);
 Q_DECLARE_METATYPE(WatchThread::Event);
@@ -55,6 +56,7 @@ FilesystemWatcher::FilesystemWatcher(QWidget *p, Qt::WindowFlags f)
 , m_alarmSound{nullptr}
 , m_soundFile{nullptr}
 , m_lastDir{QDir::home()}
+, m_alarmVolume{100}
 {
   qRegisterMetaType<std::wstring>();
   qRegisterMetaType<WatchThread::Event>();
@@ -101,6 +103,8 @@ void FilesystemWatcher::connectSignals()
 
   connect(m_trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
           this,       SLOT(onTrayActivated(QSystemTrayIcon::ActivationReason)));
+  connect(m_trayIcon, SIGNAL(messageClicked()),
+          this,       SLOT(onTrayActivated()));
 
   connect(m_objectsTable->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
           this,                             SLOT(onObjectSelected(const QModelIndex &, const QModelIndex &)));
@@ -141,8 +145,6 @@ void FilesystemWatcher::setupTrayIcon()
 
   m_trayIcon->setContextMenu(menu);
   m_trayIcon->setToolTip(tr("Ready to watch"));
-
-  connect(m_trayIcon, SIGNAL(messageClicked()), this, SLOT(showNormal()));
 }
 
 //-----------------------------------------------------------------------------
@@ -157,6 +159,7 @@ void FilesystemWatcher::loadSettings()
   }
 
   m_lastDir = QDir{settings.value(LAST_DIRECTORY, QDir::home().absolutePath()).toString()};
+  m_alarmVolume = settings.value(ALARM_VOLUME, 100).toInt();
 }
 
 //-----------------------------------------------------------------------------
@@ -166,6 +169,7 @@ void FilesystemWatcher::saveSettings()
 
   settings.setValue(GEOMETRY, saveGeometry());
   settings.setValue(LAST_DIRECTORY, m_lastDir.absolutePath());
+  settings.setValue(ALARM_VOLUME, m_alarmVolume);
   settings.sync();
 }
 
@@ -178,21 +182,34 @@ void FilesystemWatcher::onObjectSelected(const QModelIndex &selected, const QMod
     auto &data = m_objects.at(distance);
     m_reset->setEnabled(data.eventsNumber != 0);
   }
+
+  m_removeObject->setEnabled(selected.isValid() && !m_objects.empty());
 }
 
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::onAddObjectButtonClicked()
 {
-  AddObjectDialog dialog(m_lastDir, this);
+  AddObjectDialog dialog(m_lastDir, m_alarmVolume, this);
 
   if(QDialog::Accepted == dialog.exec())
   {
     const auto obj = dialog.objectPath();
     const auto objectPath = std::filesystem::path(obj.toStdWString());
 
+    auto equalPath = [&objectPath](const struct Object &o) { return o.path.compare(objectPath) == 0; };
+    auto it = std::find_if(m_objects.cbegin(), m_objects.cend(), equalPath);
+    if(it != m_objects.cend())
+    {
+      const auto message = tr("Object '%1' is already being watched.").arg(QString::fromStdString(objectPath.string()));
+      QMessageBox::information(this, tr("Add object"), message, QMessageBox::Ok);
+      return;
+    }
+
+    m_alarmVolume = dialog.alarmVolume();
+
     auto thread = new WatchThread(objectPath, dialog.objectProperties(), dialog.isRecursive());
 
-    m_objects.emplace_back(objectPath, dialog.objectAlarms(), dialog.alarmColor(), dialog.alarmVolume(), dialog.objectProperties(), thread);
+    m_objects.emplace_back(objectPath, dialog.objectAlarms(), dialog.alarmColor(), m_alarmVolume, dialog.objectProperties(), thread);
 
     connect(thread, SIGNAL(error(const QString)),
             this,   SLOT(onWatcherError(const QString)));
@@ -216,8 +233,6 @@ void FilesystemWatcher::onAddObjectButtonClicked()
     const auto objectsNum = m_objects.size();
 
     if(objectsNum == 1) updateTrayIcon();
-
-    m_removeObject->setEnabled(true);
 
     m_trayIcon->setToolTip(tr("Watching %1 object%2").arg(objectsNum).arg(objectsNum > 1 ? "s":""));
   }
@@ -247,7 +262,7 @@ void FilesystemWatcher::quitApplication()
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::onTrayActivated(QSystemTrayIcon::ActivationReason reason)
 {
-  if(reason == QSystemTrayIcon::DoubleClick)
+  if(m_trayIcon->isVisible() && reason == QSystemTrayIcon::DoubleClick)
   {
     showNormal();
     m_trayIcon->hide();
@@ -262,12 +277,12 @@ void FilesystemWatcher::closeEvent(QCloseEvent *e)
     hide();
     m_trayIcon->show();
 
-    e->ignore();
+    e->accept();
   }
   else
   {
     QDialog::closeEvent(e);
-    QApplication::quit();
+    QApplication::exit(0);
   }
 }
 

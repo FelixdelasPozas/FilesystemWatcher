@@ -36,11 +36,15 @@
 #include <time.h>
 
 //-----------------------------------------------------------------------------
-AddObjectDialog::AddObjectDialog(QDir &lastDir, QWidget *p, Qt::WindowFlags f)
+AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, QWidget *p, Qt::WindowFlags f)
 : QDialog(p,f)
 , m_dir(lastDir)
 {
   setupUi(this);
+
+  const auto value = std::min(100,std::max(1,alarmVolume));
+  m_volumeSlider->setValue(value);
+  m_volumeNumber->setText(tr("%1%").arg(value));
 
   connectSignals();
 
@@ -152,7 +156,7 @@ AlarmFlags AddObjectDialog::objectAlarms() const
 //-----------------------------------------------------------------------------
 int AddObjectDialog::alarmVolume() const
 {
-  return m_volumeSlider->value() + 1;
+  return m_volumeSlider->value();
 }
 
 //-----------------------------------------------------------------------------
@@ -268,7 +272,8 @@ void AddObjectDialog::createSoundFile()
 //-----------------------------------------------------------------------------
 void AddObjectDialog::onSoundVolumeChanged(int value)
 {
-  m_sound->setVolume(static_cast<double>(value + 1)/100);
+  m_sound->setVolume(static_cast<double>(value)/100);
+  m_volumeNumber->setText(tr("%1%").arg(value));
   if(!m_sound->isPlaying()) m_sound->play();
 }
 
