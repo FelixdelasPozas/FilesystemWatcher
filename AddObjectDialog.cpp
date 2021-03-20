@@ -42,13 +42,14 @@ AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, QWidget *
 {
   setupUi(this);
 
+  createSoundFile();
+
   const auto value = std::min(100,std::max(1,alarmVolume));
   m_volumeSlider->setValue(value);
   m_volumeNumber->setText(tr("%1%").arg(value));
+  m_sound->setVolume(static_cast<float>(value)/100.);
 
   connectSignals();
-
-  createSoundFile();
 
   if(!LogiLED::isAvailable())
   {
