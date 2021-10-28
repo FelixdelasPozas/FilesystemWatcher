@@ -28,6 +28,7 @@
 
 class QSoundEffect;
 class QTemporaryFile;
+class Object;
 
 enum AlarmFlags : char
 {
@@ -52,11 +53,13 @@ class AddObjectDialog
     /** \brief AddObjectDialog class constructor.
      * \param[in] lastDir Last used directory for opening objects.
      * \param[in] alarmVolume Default volume of the sound alarm.
+     * \param[in] objects List of current wathed objects.
      * \param[in] p Raw pointer of the object parent of this one.
      * \param[in] f Dialog flags.
      *
      */
-    explicit AddObjectDialog(QDir &lastDir, const int alarmVolume, QWidget *p = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit AddObjectDialog(QDir &lastDir, const int alarmVolume, const std::vector<Object> &objects,
+                             QWidget *p = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 
     /** \brief AddObjectDialog class virtual destructor.
      *
@@ -161,15 +164,17 @@ class AddObjectDialog
      */
     void createSoundFile();
 
-    /** \brief Helper method to generate a random color for the keyboard lights.
+    /** \brief Helper method to generate a color for the keyboard lights taking into
+     * account the colors used by other objects.
      *
      */
-    void generateRandomColor();
+    void generateColor();
 
-    QColor          m_color;     /** keyboard lights color.    */
-    QSoundEffect   *m_sound;     /** sound class.              */
-    QTemporaryFile *m_soundFile; /** wave file temporary file. */
-    QDir           &m_dir;       /** last opened dir.          */
+    QColor                     m_color;     /** keyboard lights color.         */
+    QSoundEffect              *m_sound;     /** sound class.                   */
+    QTemporaryFile            *m_soundFile; /** wave file temporary file.      */
+    QDir                      &m_dir;       /** last opened dir.               */
+    const std::vector<Object> &m_objects;   /** list of objects being watched. */
 };
 
 #endif // ADDOBJECTDIALOG_H_

@@ -19,6 +19,7 @@
 
 // Project
 #include "AddObjectDialog.h"
+#include "FilesystemWatcher.h"
 #include "LogiLED.h"
 
 // Qt
@@ -29,6 +30,7 @@
 #include <QSoundEffect>
 #include <QTemporaryFile>
 #include <QFileInfo>
+#include <QMessageBox>
 
 // C++
 #include <minwindef.h>
@@ -36,9 +38,11 @@
 #include <time.h>
 
 //-----------------------------------------------------------------------------
-AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, QWidget *p, Qt::WindowFlags f)
+AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const std::vector<Object> &objects,
+                                 QWidget *p, Qt::WindowFlags f)
 : QDialog(p,f)
 , m_dir(lastDir)
+, m_objects{objects}
 {
   setupUi(this);
 
@@ -57,7 +61,7 @@ AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, QWidget *
   }
   else
   {
-    generateRandomColor();
+    generateColor();
     updateColorButton();
   }
 }
@@ -88,10 +92,25 @@ void AddObjectDialog::connectSignals()
 //-----------------------------------------------------------------------------
 void AddObjectDialog::onAddFileClicked()
 {
+  m_object->setText("");
+  m_alarmGroup->setEnabled(false);
+  m_propertiesGroup->setEnabled(false);
+  m_dir = QDir();
+
   auto filename = QFileDialog::getOpenFileName(this, tr("Select file to watch"), m_dir.absolutePath());
 
   if(!filename.isEmpty())
   {
+    const auto objectPath = std::filesystem::path(filename.toStdWString());
+    auto equalPath = [&objectPath](const struct Object &o) { return o.getPath().compare(objectPath) == 0; };
+    auto it = std::find_if(m_objects.cbegin(), m_objects.cend(), equalPath);
+    if(it != m_objects.cend())
+    {
+      const auto message = tr("Object '%1' is already being watched.").arg(filename);
+      QMessageBox::information(this, tr("Add object"), message, QMessageBox::Ok);
+      return;
+    }
+
     filename = QDir::toNativeSeparators(filename);
     m_object->setText(filename);
 
@@ -107,10 +126,25 @@ void AddObjectDialog::onAddFileClicked()
 //-----------------------------------------------------------------------------
 void AddObjectDialog::onAddFolderClicked()
 {
+  m_object->setText("");
+  m_alarmGroup->setEnabled(false);
+  m_propertiesGroup->setEnabled(false);
+  m_dir = QDir();
+
   auto folder = QFileDialog::getExistingDirectory(this, tr("Select folder to watch"), m_dir.absolutePath());
 
   if(!folder.isEmpty())
   {
+    const auto objectPath = std::filesystem::path(folder.toStdWString());
+    auto equalPath = [&objectPath](const struct Object &o) { return o.getPath().compare(objectPath) == 0; };
+    auto it = std::find_if(m_objects.cbegin(), m_objects.cend(), equalPath);
+    if(it != m_objects.cend())
+    {
+      const auto message = tr("Object '%1' is already being watched.").arg(folder);
+      QMessageBox::information(this, tr("Add object"), message, QMessageBox::Ok);
+      return;
+    }
+
     folder = QDir::toNativeSeparators(folder);
     m_object->setText(folder);
 
@@ -285,8 +319,20 @@ bool AddObjectDialog::isRecursive() const
 }
 
 //-----------------------------------------------------------------------------
-void AddObjectDialog::generateRandomColor()
+void AddObjectDialog::generateColor()
 {
   srand(time(nullptr));
-  m_color = QColor::fromHsv(rand() % 360, 255, 255).toRgb();
+
+  if(m_objects.empty())
+  {
+    m_color = QColor::fromHsv(rand() % 360, 255, 255).toRgb();
+    return;
+  }
+
+  // Valid for a reduced list of objects. With many objects the color will converge to
+  // the first object but it is not really a problem for my case. This naive solution
+  // makes the first colors different for a small count of objects.
+  const int hue = (m_objects.front().getColor().hue() + (360 / (m_objects.size() * 2))) % 360;
+
+  m_color = QColor::fromHsv(hue, 255, 255).toRgb();
 }

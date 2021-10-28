@@ -189,7 +189,7 @@ void FilesystemWatcher::onObjectSelected(const QModelIndex &selected, const QMod
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::onAddObjectButtonClicked()
 {
-  AddObjectDialog dialog(m_lastDir, m_alarmVolume, this);
+  AddObjectDialog dialog(m_lastDir, m_alarmVolume, m_objects, this);
 
   if(QDialog::Accepted == dialog.exec())
   {
@@ -209,7 +209,7 @@ void FilesystemWatcher::onAddObjectButtonClicked()
 
     auto thread = new WatchThread(objectPath, dialog.objectProperties(), dialog.isRecursive());
 
-    m_objects.emplace_back(objectPath, dialog.objectAlarms(), dialog.alarmColor(), m_alarmVolume, dialog.objectProperties(), thread);
+    m_objects.push_back(Object(objectPath, dialog.objectAlarms(), dialog.alarmColor(), m_alarmVolume, dialog.objectProperties(), thread));
 
     connect(thread, SIGNAL(error(const QString)),
             this,   SLOT(onWatcherError(const QString)));

@@ -33,6 +33,7 @@
 class QCloseEvent;
 class QSoundEffect;
 class QTemporaryFile;
+class Object;
 
 /** \class FilesystemWatcher
  * \brief Implements the main dialog of the application.
@@ -140,24 +141,6 @@ class FilesystemWatcher
     void onCustomMenuRequested(const QPoint &p);
 
   private:
-    struct Object
-    {
-      std::filesystem::path path;         /** object path.                      */
-      AlarmFlags            alarms;       /** alarms for the user.              */
-      QColor                color;        /** color for keyboard alarm.         */
-      unsigned char         volume;       /** volume of sound alarm in [1-100]. */
-      unsigned long         events;       /** events to watch.                  */
-      WatchThread          *thread;       /** watcher thread.                   */
-      unsigned long         eventsNumber; /** number of registed events.        */
-
-      Object(const std::wstring &objectPath, const AlarmFlags alarmFlags,
-             const QColor &lightsColor, const unsigned char alarmVolume,
-             const unsigned long watchEvents, WatchThread *t)
-      : path{objectPath}, alarms{alarmFlags}, color{lightsColor},
-        volume{alarmVolume}, events{watchEvents}, thread{t}, eventsNumber{0}
-        {};
-    };
-
     /** \brief Helper method to connect signals to slots in the dialog.
      *
      */
@@ -201,5 +184,77 @@ class FilesystemWatcher
     QDir                m_lastDir;     /** last opened dir to select objects.              */
     int                 m_alarmVolume; /** volume of the sound alarm.                      */
 };
+
+/** \class Object
+ * \brief Contains the data of an object to watch.
+ *
+ */
+class Object
+{
+  public:
+    /** \brief Returns the alarms that will be triggered.
+     *
+     */
+    AlarmFlags getAlarms() const
+    { return alarms; }
+
+    /** \brief Returns the color of the keyboard alarm.
+     *
+     */
+    const QColor& getColor() const
+    { return color; }
+
+    /** \brief Returns the events being watched.
+     *
+     */
+    unsigned long getEvents() const
+    { return events; }
+
+    /** \brief Returns the number of events watched till now.
+     *
+     */
+    unsigned long getEventsNumber() const
+    { return eventsNumber; }
+
+    /** \brief Returs the path of the object.
+     *
+     */
+    std::filesystem::path getPath() const
+    { return path; }
+
+    /** \brief Returns the volume of the sound alarm.
+     *
+     */
+    unsigned char getVolume() const
+    { return volume; }
+
+  private:
+    /** \brief Object class constructor.
+     * \param[in] objectPath  Filesystem path of the object.
+     * \param[in] alarmFlags  Alarms to trigger when the object changes.
+     * \param[in] lightsColor Color to use for the keyboard alarm.
+     * \param[in] alarmVolume Volume of the sound alarm.
+     * \param[in] watchEvents Events to watch for modification.
+     * \param[in] t           Pointer to the watcher thread.
+     *
+     */
+    Object(const std::wstring &objectPath, const AlarmFlags alarmFlags,
+           const QColor &lightsColor, const unsigned char alarmVolume,
+           const unsigned long watchEvents, WatchThread *t)
+    : path{objectPath}, alarms{alarmFlags}, color{lightsColor},
+      volume{alarmVolume}, events{watchEvents}, thread{t}, eventsNumber{0}
+      {};
+
+    std::filesystem::path path;         /** object path.                      */
+    AlarmFlags            alarms;       /** alarms for the user.              */
+    QColor                color;        /** color for keyboard alarm.         */
+    unsigned char         volume;       /** volume of sound alarm in [1-100]. */
+    unsigned long         events;       /** events to watch.                  */
+    WatchThread          *thread;       /** watcher thread.                   */
+    unsigned long         eventsNumber; /** number of registed events.        */
+
+    friend class FilesystemWatcher;
+};
+
 
 #endif // FILESYSTEMWATCHER_H_
