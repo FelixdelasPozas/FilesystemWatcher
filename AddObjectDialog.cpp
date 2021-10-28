@@ -95,7 +95,6 @@ void AddObjectDialog::onAddFileClicked()
   m_object->setText("");
   m_alarmGroup->setEnabled(false);
   m_propertiesGroup->setEnabled(false);
-  m_dir = QDir();
 
   auto filename = QFileDialog::getOpenFileName(this, tr("Select file to watch"), m_dir.absolutePath());
 
@@ -129,7 +128,6 @@ void AddObjectDialog::onAddFolderClicked()
   m_object->setText("");
   m_alarmGroup->setEnabled(false);
   m_propertiesGroup->setEnabled(false);
-  m_dir = QDir();
 
   auto folder = QFileDialog::getExistingDirectory(this, tr("Select folder to watch"), m_dir.absolutePath());
 
