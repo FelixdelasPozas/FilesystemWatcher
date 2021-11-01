@@ -36,6 +36,7 @@
 #include <minwindef.h>
 #include <cstdlib>
 #include <time.h>
+#include <set>
 
 //-----------------------------------------------------------------------------
 AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const std::vector<Object> &objects,
@@ -327,10 +328,33 @@ void AddObjectDialog::generateColor()
     return;
   }
 
-  // Valid for a reduced list of objects. With many objects the color will converge to
-  // the first object but it is not really a problem for my case. This naive solution
-  // makes the first colors different for a small count of objects.
-  const int hue = (m_objects.front().getColor().hue() + (360 / (m_objects.size() * 2))) % 360;
+  int increment = 180;
+  bool valid = false;
+  int hue = 0;
+  std::set<int> usedValues;
+
+  auto addValue = [&usedValues](const Object &o)
+                  { usedValues.insert(o.getColor().hue()); };
+
+  std::for_each(m_objects.cbegin(), m_objects.cend(), addValue);
+
+
+  auto testValue = [&usedValues, &increment](const Object &o)
+                   { return usedValues.count((o.getColor().hue() + increment) % 360) == 0; };
+
+  while (!valid && increment > 1)
+  {
+    auto it = std::find_if(m_objects.cbegin(), m_objects.cend(), testValue);
+    if(it != m_objects.cend())
+    {
+      hue = ((*it).getColor().hue() + increment) % 360;
+      valid = true;
+    }
+    else
+    {
+      increment /= 2;
+    }
+  }
 
   m_color = QColor::fromHsv(hue, 255, 255).toRgb();
 }
