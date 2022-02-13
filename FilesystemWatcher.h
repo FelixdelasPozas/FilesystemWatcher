@@ -60,6 +60,16 @@ class FilesystemWatcher
   protected:
     virtual void closeEvent(QCloseEvent *e);
 
+  public slots:
+    virtual void done(int) override
+    { close(); }
+
+    virtual void accept() override
+    { close(); }
+
+    virtual void reject() override
+    { close(); }
+
   private slots:
     /** \brief Closes the application.
      *
