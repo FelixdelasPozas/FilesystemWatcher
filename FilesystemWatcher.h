@@ -185,7 +185,6 @@ class FilesystemWatcher
     bool showMessage(const QString title, const QString message);
 
     QSystemTrayIcon    *m_trayIcon;    /** tray icon.                                      */
-    bool                m_watching;    /** true if watching and false otherwise.           */
     bool                m_needsExit;   /** true to close the application, false otherwise. */
     std::vector<Object> m_objects;     /** list of watched objects.                        */
     QAction            *m_stopAction;  /** stop alarms tray menu action.                   */
@@ -238,6 +237,12 @@ class Object
     unsigned char getVolume() const
     { return volume; }
 
+    bool isInAlarm() const
+    { return inAlarm; }
+
+    void setIsInAlarm(const bool value)
+    { inAlarm = value; }
+
   private:
     /** \brief Object class constructor.
      * \param[in] objectPath  Filesystem path of the object.
@@ -252,7 +257,8 @@ class Object
            const QColor &lightsColor, const unsigned char alarmVolume,
            const unsigned long watchEvents, WatchThread *t)
     : path{objectPath}, alarms{alarmFlags}, color{lightsColor},
-      volume{alarmVolume}, events{watchEvents}, thread{t}, eventsNumber{0}
+      volume{alarmVolume}, events{watchEvents}, thread{t},
+      eventsNumber{0}, inAlarm{false}
       {};
 
     std::filesystem::path path;         /** object path.                      */
@@ -262,6 +268,7 @@ class Object
     unsigned long         events;       /** events to watch.                  */
     WatchThread          *thread;       /** watcher thread.                   */
     unsigned long         eventsNumber; /** number of registed events.        */
+    bool                  inAlarm;      /** true if currently in alarm mode.  */
 
     friend class FilesystemWatcher;
 };

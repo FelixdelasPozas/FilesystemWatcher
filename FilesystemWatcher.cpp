@@ -51,7 +51,6 @@ Q_DECLARE_METATYPE(WatchThread::Event);
 FilesystemWatcher::FilesystemWatcher(QWidget *p, Qt::WindowFlags f)
 : QDialog(p,f)
 , m_trayIcon{new QSystemTrayIcon(QIcon(":/FilesystemWatcher/eye-1.svg"), this)}
-, m_watching{false}
 , m_needsExit{false}
 , m_alarmSound{nullptr}
 , m_soundFile{nullptr}
@@ -104,7 +103,7 @@ void FilesystemWatcher::connectSignals()
   connect(m_trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
           this,       SLOT(onTrayActivated(QSystemTrayIcon::ActivationReason)));
   connect(m_trayIcon, SIGNAL(messageClicked()),
-          this,       SLOT(onTrayActivated()));
+          this,       SLOT(stopAlarms()));
 
   connect(m_objectsTable->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
           this,                             SLOT(onObjectSelected(const QModelIndex &, const QModelIndex &)));
@@ -318,6 +317,8 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
 
     if((data.alarms & AlarmFlags::SOUND) != 0 && !m_alarmSound && !m_soundFile)
     {
+      data.setIsInAlarm(true);
+
       m_alarmSound = new QSoundEffect(this);
       m_soundFile = QTemporaryFile::createLocalFile(":/FilesystemWatcher/Beeper.wav");
       m_alarmSound->setSource(QUrl::fromLocalFile(m_soundFile->fileName()));
@@ -367,7 +368,6 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
       if((data.alarms & AlarmFlags::MESSAGE) != 0)
       {
         const auto title = QString::fromStdWString(data.path.wstring());
-        const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
         if(isVisible())
         {
           if(showMessage(title, message))
@@ -377,6 +377,7 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
         }
         else
         {
+          const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
           message.remove("<b>").remove("</b>");
           m_trayIcon->showMessage(title, message, icon, 1500);
         }
@@ -476,6 +477,9 @@ void FilesystemWatcher::stopAlarms()
     m_stopButton->setEnabled(false);
 
     inUse = false;
+
+    auto stopAlarm = [](Object &o){ o.setIsInAlarm(false); };
+    std::for_each(m_objects.begin(), m_objects.end(), stopAlarm);
   }
 }
 
@@ -492,6 +496,8 @@ void FilesystemWatcher::onResetButtonClicked()
     objectsModel->resetObject(data.path.wstring());
 
     m_reset->setEnabled(false);
+
+    if(data.isInAlarm()) stopAlarms();
   }
 }
 
@@ -504,6 +510,8 @@ void FilesystemWatcher::onRemoveButtonClicked()
     auto &data = m_objects.at(index.row());
     auto objectsModel = qobject_cast<ObjectsTableModel*>(m_objectsTable->model());
     objectsModel->removeObject(data.path.wstring());
+
+    if(data.isInAlarm()) stopAlarms();
 
     m_objects.erase(m_objects.begin() + index.row());
 
