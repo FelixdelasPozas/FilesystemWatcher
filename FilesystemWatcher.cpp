@@ -99,6 +99,7 @@ void FilesystemWatcher::connectSignals()
   connect(m_stopButton,   SIGNAL(clicked(bool)), this, SLOT(stopAlarms()));
   connect(m_reset,        SIGNAL(clicked(bool)), this, SLOT(onResetButtonClicked()));
   connect(m_removeObject, SIGNAL(clicked(bool)), this, SLOT(onRemoveButtonClicked()));
+  connect(m_mute,         SIGNAL(toggled(bool)), this, SLOT(onMuteActionClicked()));
 
   connect(m_trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
           this,       SLOT(onTrayActivated(QSystemTrayIcon::ActivationReason)));
@@ -127,6 +128,9 @@ void FilesystemWatcher::setupTrayIcon()
   auto addFile = new QAction(tr("Watch object..."));
   connect(addFile, SIGNAL(triggered(bool)), this, SLOT(onAddObjectButtonClicked()));
 
+  auto muteAction = new QAction(tr("Mute"));
+  connect(muteAction, SIGNAL(triggered(bool)), this, SLOT(onMuteActionClicked()));
+
   auto aboutAction = new QAction(tr("About..."));
   connect(aboutAction, SIGNAL(triggered(bool)), this, SLOT(onAboutButtonClicked()));
 
@@ -135,6 +139,7 @@ void FilesystemWatcher::setupTrayIcon()
 
   menu->addAction(showAction);
   menu->addAction(m_stopAction);
+  menu->addAction(muteAction);
   menu->addSeparator();
   menu->addAction(addFile);
   menu->addSeparator();
@@ -315,28 +320,31 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
     auto &data = *it;
     data.eventsNumber += 1;
 
-    if((data.alarms & AlarmFlags::SOUND) != 0 && !m_alarmSound && !m_soundFile)
+    if(!m_mute->isChecked())
     {
-      data.setIsInAlarm(true);
+      if((data.alarms & AlarmFlags::SOUND) != 0 && !m_alarmSound && !m_soundFile)
+      {
+        data.setIsInAlarm(true);
 
-      m_alarmSound = new QSoundEffect(this);
-      m_soundFile = QTemporaryFile::createLocalFile(":/FilesystemWatcher/Beeper.wav");
-      m_alarmSound->setSource(QUrl::fromLocalFile(m_soundFile->fileName()));
-      m_alarmSound->setLoopCount(QSoundEffect::Infinite);
-      m_alarmSound->setVolume(static_cast<double>(data.volume)/100.0);
-      m_alarmSound->play();
-    }
+        m_alarmSound = new QSoundEffect(this);
+        m_soundFile = QTemporaryFile::createLocalFile(":/FilesystemWatcher/Beeper.wav");
+        m_alarmSound->setSource(QUrl::fromLocalFile(m_soundFile->fileName()));
+        m_alarmSound->setLoopCount(QSoundEffect::Infinite);
+        m_alarmSound->setVolume(static_cast<double>(data.volume)/100.0);
+        m_alarmSound->play();
+      }
 
-    if((data.alarms & AlarmFlags::LIGHTS) != 0)
-    {
-      if(!data.color.isValid()) data.color = QColor(255,255,255);
-      LogiLED::getInstance().setColor(data.color.red(), data.color.green(), data.color.blue());
-    }
+      if((data.alarms & AlarmFlags::LIGHTS) != 0)
+      {
+        if(!data.color.isValid()) data.color = QColor(255,255,255);
+        LogiLED::getInstance().setColor(data.color.red(), data.color.green(), data.color.blue());
+      }
 
-    if((data.alarms & (AlarmFlags::LIGHTS|AlarmFlags::SOUND)) != 0)
-    {
-      m_stopAction->setVisible(true);
-      m_stopButton->setEnabled(true);
+      if((data.alarms & (AlarmFlags::LIGHTS|AlarmFlags::SOUND)) != 0)
+      {
+        m_stopAction->setVisible(true);
+        m_stopButton->setEnabled(true);
+      }
     }
 
     QString suffix = tr(" <b>'%1'</b>.").arg(qObject);
@@ -365,7 +373,7 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
     {
       log(message);
 
-      if((data.alarms & AlarmFlags::MESSAGE) != 0)
+      if(!m_mute->isChecked() && (data.alarms & AlarmFlags::MESSAGE) != 0)
       {
         const auto title = QString::fromStdWString(data.path.wstring());
         if(isVisible())
@@ -442,18 +450,28 @@ void FilesystemWatcher::updateTrayIcon()
 
   static int index = 0;
 
-  if(m_objects.empty())
+  QIcon icon(":/FilesystemWatcher/eye-1.svg");
+
+  if(m_mute->isChecked())
   {
-    index = 0;
+    icon = QIcon(":/FilesystemWatcher/eye-disabled.svg");
   }
   else
   {
-    index = (index + 1) % FRAMES.size();
-    if(!m_needsExit) QTimer::singleShot(1000, this, SLOT(updateTrayIcon()));
+    if(m_objects.empty())
+    {
+      index = 0;
+    }
+    else
+    {
+      index = (index + 1) % FRAMES.size();
+      icon = FRAMES.at(index);
+      if(!m_needsExit) QTimer::singleShot(1000, this, SLOT(updateTrayIcon()));
+    }
   }
 
-  m_trayIcon->setIcon(FRAMES.at(index));
-  setWindowIcon(FRAMES.at(index));
+  m_trayIcon->setIcon(icon);
+  setWindowIcon(icon);
 }
 
 //-----------------------------------------------------------------------------
@@ -566,6 +584,32 @@ void FilesystemWatcher::log(const QString &message)
 {
   const auto prefix = QDateTime::currentDateTime().toString("hh:mm:ss");
   m_log->append(tr("%1 - %2").arg(prefix).arg(message));
+}
+
+//-----------------------------------------------------------------------------
+void FilesystemWatcher::onMuteActionClicked()
+{
+  bool state = m_mute->isChecked();
+  auto action = qobject_cast<QAction *>(sender());
+  if(action)
+  {
+    // this will call onMuteActionClicked again.
+    m_mute->setChecked(!state);
+    return;
+  }
+
+  action = m_trayIcon->contextMenu()->actions().at(2);
+  if(state)
+  {
+    action->setText(tr("Unmute"));
+    stopAlarms();
+  }
+  else
+  {
+    action->setText(tr("Mute"));
+  }
+
+  updateTrayIcon();
 }
 
 //-----------------------------------------------------------------------------

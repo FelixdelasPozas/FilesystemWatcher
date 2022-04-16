@@ -33,14 +33,14 @@ Download and execute the ![latest release](https://github.com/FelixdelasPozas/Fi
 
 Simple main dialog. The last column with the alarm color will only appear if a Logitech RGB keyboard is found on the system.
 
-![Main dialog](https://user-images.githubusercontent.com/12167134/109077834-0bb2c200-76fd-11eb-8015-4e5b21b2717e.png)
+![Main dialog](https://user-images.githubusercontent.com/12167134/163689600-b2b67215-fa84-4dd9-a3c8-27dc30a7fe23.png)
 
 Add object dialog. The option to use keyboard lights as an alarm will only be available if you have a Logitech RGB keyboard.
 
 ![Add object dialog](https://user-images.githubusercontent.com/12167134/109077833-0b1a2b80-76fd-11eb-90cf-f80727e7a155.png)
 
 # Repository information
-**Version**: 1.0.9
+**Version**: 1.1.0
 
 **Status**: finished
 
@@ -50,7 +50,7 @@ Add object dialog. The option to use keyboard lights as an alarm will only be av
 
 | Language                     |files          |blank        |comment           |code  |
 |:-----------------------------|--------------:|------------:|-----------------:|-----:|
-| C++                          |    7          |  285        |    213           |1198  |
-| C/C++ Header                 |    6          |  145        |    443           | 279  |
+| C++                          |    7          |  290        |    215           |1235  |
+| C/C++ Header                 |    6          |  146        |    446           | 280  |
 | CMake                        |    1          |   21        |      7           |  57  |
-| **Total**                    |   **14**      |  **451**    |   **663**        |**1534**|
+| **Total**                    |   **14**      |  **457**    |   **668**        |**1572**|

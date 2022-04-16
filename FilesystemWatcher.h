@@ -150,6 +150,11 @@ class FilesystemWatcher
      */
     void onCustomMenuRequested(const QPoint &p);
 
+    /** \brief Modifies the UI when mute action is checked.
+     *
+     */
+    void onMuteActionClicked();
+
   private:
     /** \brief Helper method to connect signals to slots in the dialog.
      *
