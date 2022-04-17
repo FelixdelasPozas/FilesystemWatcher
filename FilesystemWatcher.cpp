@@ -422,7 +422,7 @@ void FilesystemWatcher::onRename(const std::wstring oldName, const std::wstring 
     auto message = tr("File <b>'%2'</b> renamed to <b>'%3'</b>.").arg(QString::fromStdWString(oldName)).arg(QString::fromStdWString(newName));
     log(message);
 
-    if((data.alarms & AlarmFlags::MESSAGE) != 0)
+    if(!m_mute->isChecked() && ((data.alarms & AlarmFlags::MESSAGE) != 0))
     {
       const auto title = QString::fromStdWString(data.path.wstring());
       const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
