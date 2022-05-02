@@ -197,6 +197,7 @@ class FilesystemWatcher
     QTemporaryFile     *m_soundFile;   /** temporary file for alarm wav file.              */
     QDir                m_lastDir;     /** last opened dir to select objects.              */
     int                 m_alarmVolume; /** volume of the sound alarm.                      */
+    AlarmFlags          m_alarmFlags;  /** default alarms for add object dialog.           */
 };
 
 /** \class Object

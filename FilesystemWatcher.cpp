@@ -43,6 +43,7 @@
 const QString GEOMETRY = "Geometry";
 const QString LAST_DIRECTORY = "Last used directory";
 const QString ALARM_VOLUME = "Alarm volume";
+const QString DEFAULT_ALARMS = "Default alarms";
 
 Q_DECLARE_METATYPE(std::wstring);
 Q_DECLARE_METATYPE(WatchThread::Event);
@@ -164,6 +165,7 @@ void FilesystemWatcher::loadSettings()
 
   m_lastDir = QDir{settings.value(LAST_DIRECTORY, QDir::home().absolutePath()).toString()};
   m_alarmVolume = settings.value(ALARM_VOLUME, 100).toInt();
+  m_alarmFlags = static_cast<AlarmFlags>(settings.value(DEFAULT_ALARMS, 7).toInt());
 }
 
 //-----------------------------------------------------------------------------
@@ -174,6 +176,7 @@ void FilesystemWatcher::saveSettings()
   settings.setValue(GEOMETRY, saveGeometry());
   settings.setValue(LAST_DIRECTORY, m_lastDir.absolutePath());
   settings.setValue(ALARM_VOLUME, m_alarmVolume);
+  settings.setValue(DEFAULT_ALARMS, static_cast<int>(m_alarmFlags));
   settings.sync();
 }
 
@@ -193,7 +196,7 @@ void FilesystemWatcher::onObjectSelected(const QModelIndex &selected, const QMod
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::onAddObjectButtonClicked()
 {
-  AddObjectDialog dialog(m_lastDir, m_alarmVolume, m_objects, this);
+  AddObjectDialog dialog(m_lastDir, m_alarmVolume, m_alarmFlags, m_objects, this);
 
   if(QDialog::Accepted == dialog.exec())
   {
@@ -210,6 +213,7 @@ void FilesystemWatcher::onAddObjectButtonClicked()
     }
 
     m_alarmVolume = dialog.alarmVolume();
+    m_alarmFlags = dialog.objectAlarms();
 
     auto thread = new WatchThread(objectPath, dialog.objectProperties(), dialog.isRecursive());
 

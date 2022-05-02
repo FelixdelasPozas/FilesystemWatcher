@@ -1,11 +1,11 @@
 project (FilesystemWatcher)
 
-cmake_minimum_required (VERSION 2.8.6)
+cmake_minimum_required (VERSION 3.21)
 
 # Version Number
 set (FILESYSTEM_WATCHER_VERSION_MAJOR 1)
 set (FILESYSTEM_WATCHER_VERSION_MINOR 1)
-set (FILESYSTEM_WATCHER_VERSION_PATCH 1)
+set (FILESYSTEM_WATCHER_VERSION_PATCH 2)
 
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -35,7 +35,7 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
   set(CORE_EXTERNAL_LIBS ${CORE_EXTERNAL_LIBS} ${QT_QTTEST_LIBRARY})
 endif (CMAKE_BUILD_TYPE MATCHES Debug)
 
-set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++17")
+set(CMAKE_CXX_FLAGS " -Wall -mwindows -Wno-deprecated -std=c++17")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Multimedia_EXECUTABLE_COMPILE_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Core_EXECUTABLE_COMPILE_FLAGS}")

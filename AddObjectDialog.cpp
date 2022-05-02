@@ -39,10 +39,11 @@
 #include <set>
 
 //-----------------------------------------------------------------------------
-AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const std::vector<Object> &objects,
-                                 QWidget *p, Qt::WindowFlags f)
+AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const AlarmFlags flags,
+                                 const std::vector<Object> &objects, QWidget *p, Qt::WindowFlags f)
 : QDialog(p,f)
 , m_dir(lastDir)
+, m_alarmFlags{flags}
 , m_objects{objects}
 {
   setupUi(this);
@@ -53,6 +54,10 @@ AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const std
   m_volumeSlider->setValue(value);
   m_volumeNumber->setText(tr("%1%").arg(value));
   m_sound->setVolume(static_cast<float>(value)/100.);
+
+  m_useKeyboardLights->setChecked((m_alarmFlags & AlarmFlags::LIGHTS) != 0);
+  m_useTrayMessage->setChecked((m_alarmFlags & AlarmFlags::MESSAGE) != 0);
+  m_soundAlarm->setChecked((m_alarmFlags & AlarmFlags::SOUND) != 0);
 
   connectSignals();
 
@@ -228,6 +233,7 @@ void AddObjectDialog::updateColorButton()
   QIcon icon(pixmap);
 
   m_lightButton->setIcon(icon);
+  m_lightButton->setEnabled(m_useKeyboardLights->isChecked());
 }
 
 //-----------------------------------------------------------------------------
