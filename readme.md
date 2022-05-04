@@ -50,7 +50,7 @@ Add object dialog. The option to use keyboard lights as an alarm will only be av
 
 | Language                     |files          |blank        |comment           |code  |
 |:-----------------------------|--------------:|------------:|-----------------:|-----:|
-| C++                          |    7          |  291        |    215           |1244  |
-| C/C++ Header                 |    6          |  146        |    447           | 282  |
-| CMake                        |    1          |   21        |      7           |  57  |
-| **Total**                    |   **14**      |  **458**    |   **669**        |**1583**|
+| C++                          |    7          |  293        |    221           |1248  |
+| C/C++ Header                 |    6          |  152        |    445           | 309  |
+| CMake                        |    1          |   18        |      7           |  57  |
+| **Total**                    |   **14**      |  **463**    |   **673**        |**1614**|
