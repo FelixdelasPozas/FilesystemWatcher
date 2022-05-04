@@ -55,9 +55,9 @@ AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const Ala
   m_volumeNumber->setText(tr("%1%").arg(value));
   m_sound->setVolume(static_cast<float>(value)/100.);
 
-  m_useKeyboardLights->setChecked((m_alarmFlags & AlarmFlags::LIGHTS) != 0);
-  m_useTrayMessage->setChecked((m_alarmFlags & AlarmFlags::MESSAGE) != 0);
-  m_soundAlarm->setChecked((m_alarmFlags & AlarmFlags::SOUND) != 0);
+  m_useKeyboardLights->setChecked((m_alarmFlags & AlarmFlags::LIGHTS) != AlarmFlags::NONE);
+  m_useTrayMessage->setChecked((m_alarmFlags & AlarmFlags::MESSAGE) != AlarmFlags::NONE);
+  m_soundAlarm->setChecked((m_alarmFlags & AlarmFlags::SOUND) != AlarmFlags::NONE);
 
   connectSignals();
 
@@ -168,14 +168,14 @@ QString AddObjectDialog::objectPath() const
 }
 
 //-----------------------------------------------------------------------------
-unsigned long AddObjectDialog::objectProperties() const
+Events AddObjectDialog::objectEvents() const
 {
-  unsigned long result = 0;
+  Events result = Events::NONE;
 
-  if(m_createProp->isChecked()) result |= FILE_ACTION_ADDED;
-  if(m_modifyProp->isChecked()) result |= FILE_ACTION_MODIFIED;
-  if(m_deleteProp->isChecked()) result |= FILE_ACTION_REMOVED;;
-  if(m_renameProp->isChecked()) result |= FILE_ACTION_RENAMED_NEW_NAME|FILE_ACTION_RENAMED_OLD_NAME;
+  if(m_createProp->isChecked()) result |= Events::ADDED;
+  if(m_modifyProp->isChecked()) result |= Events::MODIFIED;
+  if(m_deleteProp->isChecked()) result |= Events::REMOVED;
+  if(m_renameProp->isChecked()) result |= Events::RENAMED_NEW|Events::RENAMED_OLD;
 
   return result;
 }

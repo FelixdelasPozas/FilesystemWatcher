@@ -108,7 +108,7 @@ class FilesystemWatcher
      * \param[in] e Event.
      *
      */
-    void onModification(const std::wstring object, const WatchThread::Event e);
+    void onModification(const std::wstring object, const Events e);
 
     /** \brief Updates the internal data about the object and warns the user of an event.
      * \param[in] oldName Object old name.
@@ -222,7 +222,7 @@ class Object
     /** \brief Returns the events being watched.
      *
      */
-    unsigned long getEvents() const
+    Events getEvents() const
     { return events; }
 
     /** \brief Returns the number of events watched till now.
@@ -261,7 +261,7 @@ class Object
      */
     Object(const std::wstring &objectPath, const AlarmFlags alarmFlags,
            const QColor &lightsColor, const unsigned char alarmVolume,
-           const unsigned long watchEvents, WatchThread *t)
+           const Events watchEvents, WatchThread *t)
     : path{objectPath}, alarms{alarmFlags}, color{lightsColor},
       volume{alarmVolume}, events{watchEvents}, thread{t},
       eventsNumber{0}, inAlarm{false}
@@ -271,7 +271,7 @@ class Object
     AlarmFlags            alarms;       /** alarms for the user.              */
     QColor                color;        /** color for keyboard alarm.         */
     unsigned char         volume;       /** volume of sound alarm in [1-100]. */
-    unsigned long         events;       /** events to watch.                  */
+    Events                events;       /** events to watch.                  */
     WatchThread          *thread;       /** watcher thread.                   */
     unsigned long         eventsNumber; /** number of registed events.        */
     bool                  inAlarm;      /** true if currently in alarm mode.  */

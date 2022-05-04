@@ -28,7 +28,7 @@
 #include <fileapi.h>
 
 //-----------------------------------------------------------------------------
-WatchThread::WatchThread(const std::filesystem::path &object, const unsigned long events, bool recursive, QObject *p)
+WatchThread::WatchThread(const std::filesystem::path &object, const Events events, bool recursive, QObject *p)
 : QThread{p}
 , m_object(object)
 , m_events{events}
@@ -79,8 +79,7 @@ void WatchThread::run()
   OVERLAPPED overlapped{0};
   memset(&overlapped, 0, sizeof(OVERLAPPED));
 
-  std::vector<BYTE> buffer;
-  buffer.resize(2048);
+  std::vector<BYTE> buffer(2048, 0);
 
   bool async_pending = false;
   DWORD bytes_returned = 0;
@@ -90,7 +89,7 @@ void WatchThread::run()
     const auto result = ReadDirectoryChangesW(objectHandle,
                                               buffer.data(),
                                               static_cast<DWORD>(buffer.size()),
-                                              m_recursive,
+                                              static_cast<WINBOOL>(m_recursive),
                                               watchProperties,
                                               0,
                                               &overlapped,
@@ -124,12 +123,19 @@ void WatchThread::run()
           do
           {
             const std::wstring changed_file_w{ information->FileName, information->FileNameLength / sizeof(information->FileName[0]) };
+            const Events event = eventMapping.at(information->Action);
 
-            if((m_events & information->Action) != 0)
+            if((m_events & event) != Events::NONE)
             {
-              const Event event = eventMapping.at(information->Action);
-
-              processEvent(changed_file_w, event);
+              if(!processEvent(changed_file_w, event))
+              {
+                // break;
+                //
+                // NOTE: Mingw64 9.2.0 worked fine, upgrading to Mingw64 11.3.0
+                // broke this giving a modified event for the desired file
+                // even when nothing has changed after another HANDLE has been
+                // modified in the same directory.
+              }
             }
 
             if (information->NextEntryOffset == 0) break;
@@ -178,22 +184,24 @@ QString WatchThread::getLastErrorString(const DWORD errorCode)
 }
 
 //-----------------------------------------------------------------------------
-void WatchThread::processEvent(const std::wstring &name, const Event &e)
+bool WatchThread::processEvent(const std::wstring &name, const Events &e)
 {
   if(std::filesystem::is_directory(m_object))
   {
     switch(e)
     {
-      case Event::RENAMED_NEW:
+      case Events::RENAMED_NEW:
         emit renamed(m_oldName, m_object.wstring() + L"\\" + name);
         break;
-      case Event::RENAMED_OLD:
+      case Events::RENAMED_OLD:
         m_oldName = m_object.wstring() + L"\\" + name;
         break;
       default:
         emit modified(m_object.wstring() + L"\\" + name, e);
         break;
     }
+
+    return true;
   }
   else
   {
@@ -206,7 +214,7 @@ void WatchThread::processEvent(const std::wstring &name, const Event &e)
     {
       switch(e)
       {
-        case Event::RENAMED_NEW:
+        case Events::RENAMED_NEW:
           if(m_isRename)
           {
             const auto oldFilename = m_object.wstring();
@@ -215,7 +223,7 @@ void WatchThread::processEvent(const std::wstring &name, const Event &e)
             m_isRename = false;
           }
           break;
-        case Event::RENAMED_OLD:
+        case Events::RENAMED_OLD:
           // update m_object with the new name the next event.
           m_isRename = true;
           break;
@@ -223,6 +231,10 @@ void WatchThread::processEvent(const std::wstring &name, const Event &e)
           emit modified(m_object.wstring(), e);
           break;
       }
+
+      return true;
     }
   }
+
+  return false;
 }

@@ -21,6 +21,7 @@
 #define ADDOBJECTDIALOG_H_
 
 #include "ui_AddObjectDialog.h"
+#include <WatchThread.h>
 
 // Qt
 #include <QDialog>
@@ -30,15 +31,28 @@ class QSoundEffect;
 class QTemporaryFile;
 class Object;
 
-enum AlarmFlags : char
+enum class AlarmFlags : char
 {
-  NONE = 0, MESSAGE = 1, LIGHTS = 2, SOUND = 4
+  NONE    = 0,
+  MESSAGE = 0b00000001,
+  LIGHTS  = 0b00000010,
+  SOUND   = 0b00000100
 };
 
 inline AlarmFlags operator|(AlarmFlags a, AlarmFlags b)
 {
-  return static_cast<AlarmFlags>(static_cast<int>(a) | static_cast<int>(b));
+  return static_cast<AlarmFlags>(static_cast<std::underlying_type_t<AlarmFlags>>(a) |
+                                 static_cast<std::underlying_type_t<AlarmFlags>>(b) );
 }
+
+inline AlarmFlags operator&(AlarmFlags a, AlarmFlags b)
+{
+  return static_cast<AlarmFlags>(static_cast<std::underlying_type_t<AlarmFlags>>(a) &
+                                 static_cast<std::underlying_type_t<AlarmFlags>>(b) );
+}
+
+inline AlarmFlags operator|=(AlarmFlags &lhs, AlarmFlags rhs)
+{ lhs = lhs|rhs; return lhs; }
 
 /** \class AddObjectDialog
  * \brief Implements the dialog to add an object to watch.
@@ -75,7 +89,7 @@ class AddObjectDialog
     /** \brief Returns the object properties to watch.
      *
      */
-    unsigned long objectProperties() const;
+    Events objectEvents() const;
 
     /** \brief Returns the alarms for the object modifications.
      *

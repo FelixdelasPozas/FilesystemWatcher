@@ -79,7 +79,4 @@ set (EXTERNAL_LIBRARIES
 	)
   
 add_executable(FilesystemWatcher ${SOURCES})
-target_link_libraries (FilesystemWatcher ${EXTERNAL_LIBRARIES})
-	
-
-	
+target_link_libraries (FilesystemWatcher ${EXTERNAL_LIBRARIES})	

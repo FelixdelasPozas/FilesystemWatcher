@@ -29,6 +29,26 @@
 #include <synchapi.h>
 #include <vector>
 #include <map>
+#include <type_traits>
+
+enum class Events: char
+{
+  NONE        = 0,
+  ADDED       = 0b00000001,
+  REMOVED     = 0b00000010,
+  MODIFIED    = 0b00000100,
+  RENAMED_OLD = 0b00001000,
+  RENAMED_NEW = 0b00010000
+};
+
+inline Events operator|(Events lhs, Events rhs)
+{ return static_cast<Events>(static_cast<std::underlying_type_t<Events>>(lhs)|static_cast<std::underlying_type_t<Events>>(rhs)); }
+
+inline Events operator&(Events lhs, Events rhs)
+{ return static_cast<Events>(static_cast<std::underlying_type_t<Events>>(lhs)&static_cast<std::underlying_type_t<Events>>(rhs)); }
+
+inline Events operator|=(Events &lhs, Events rhs)
+{ lhs = lhs|rhs; return lhs; }
 
 /** \class WatchThread
  * \brief Thread wathing objects.
@@ -39,6 +59,7 @@ class WatchThread
 {
     Q_OBJECT
   public:
+
     /** \brief WatchThread class constructor.
      * \param[in] object Path of the object to watch.
      * \param[in] properties Events to watch.
@@ -46,7 +67,7 @@ class WatchThread
      * \param[in] recursive True to monitor the directory subtree, false to only monitor the directory files.
      *
      */
-    explicit WatchThread(const std::filesystem::path &object, const unsigned long events, bool recursive = false, QObject *p = nullptr);
+    explicit WatchThread(const std::filesystem::path &object, const Events events, bool recursive = false, QObject *p = nullptr);
 
     /** \brief WatchThread class virtual destructor.
      *
@@ -59,14 +80,9 @@ class WatchThread
      */
     void abort();
 
-    /** \brief Object status.
-     *
-     */
-    enum class Event: char { ADDED, REMOVED, MODIFIED, RENAMED_OLD, RENAMED_NEW };
-
   signals:
     void renamed(const std::wstring oldName, const std::wstring newName);
-    void modified(const std::wstring obj, const WatchThread::Event event);
+    void modified(const std::wstring obj, const Events event);
     void error(const QString message);
 
   protected:
@@ -76,14 +92,14 @@ class WatchThread
     /** Maps the changes with the corresponding event.
      *
      *  From https://docs.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-file_notify_information                 */
-    const std::map<DWORD, Event> eventMapping =
+    const std::map<DWORD, Events> eventMapping =
     {
-      { FILE_ACTION_ADDED,            Event::ADDED },        /** The file was added to the directory.                  */
-      { FILE_ACTION_REMOVED,          Event::REMOVED },      /** The file was removed from the directory.              */
-      { FILE_ACTION_MODIFIED,         Event::MODIFIED },     /** The file was modified. This can be a change in the
+      { FILE_ACTION_ADDED,            Events::ADDED },        /** The file was added to the directory.                  */
+      { FILE_ACTION_REMOVED,          Events::REMOVED },      /** The file was removed from the directory.              */
+      { FILE_ACTION_MODIFIED,         Events::MODIFIED },     /** The file was modified. This can be a change in the
                                                                  time stamp or attributes.                             */
-      { FILE_ACTION_RENAMED_OLD_NAME, Event::RENAMED_OLD },  /** The file was renamed and this is the old name.        */
-      { FILE_ACTION_RENAMED_NEW_NAME, Event::RENAMED_NEW }   /** The file was renamed and this is the new name.        */
+      { FILE_ACTION_RENAMED_OLD_NAME, Events::RENAMED_OLD },  /** The file was renamed and this is the old name.        */
+      { FILE_ACTION_RENAMED_NEW_NAME, Events::RENAMED_NEW }   /** The file was renamed and this is the new name.        */
     };
 
     /** Properties to watch on a file or directory object. Only last access and creation applies to a directory. The
@@ -124,21 +140,22 @@ class WatchThread
      */
     static QString getLastErrorString(const DWORD errorCode);
 
-    /** \brief Processes the event for the 'name' object.
+    /** \brief Processes the event for the 'name' object. Returns true on success and
+     *  false otherwise.
      * \param[in] name Name given in the event information struct.
      * \param[in] e Event.
      *
      */
-    void processEvent(const std::wstring &name, const Event &e);
+    bool processEvent(const std::wstring &name, const Events &e);
 
     std::filesystem::path m_object;      /** path of the object to watch.                            */
-    const unsigned long   m_events;      /** events to watch.                                        */
+    const Events          m_events;      /** events to watch.                                        */
     HANDLE                m_stopHandle;  /** HANDLES to signal the thread to stop.                   */
     bool                  m_isDirectory; /** True if the object is a directory, false if its a file. */
     std::wstring          m_oldName;     /** old name in case of a rename event.                     */
     bool                  m_isRename;    /** True when a rename event is received with the old name
                                              to signal that the next event will rename m_object.     */
-    bool                  m_recursive;   /** True to monitor the directory subtree and false to
+    const bool            m_recursive;   /** True to monitor the directory subtree and false to
                                              monitor only the files in the directory.                */
 };
 

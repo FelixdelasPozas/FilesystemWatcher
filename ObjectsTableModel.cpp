@@ -155,7 +155,7 @@ QVariant ObjectsTableModel::headerData(int section, Qt::Orientation orientation,
 }
 
 //-----------------------------------------------------------------------------
-void ObjectsTableModel::modification(const std::wstring obj, const WatchThread::Event e)
+void ObjectsTableModel::modification(const std::wstring obj, const Events e)
 {
   auto objText = QString::fromStdWString(obj);
 
@@ -196,7 +196,7 @@ void ObjectsTableModel::rename(const std::wstring oldName, const std::wstring ne
   {
     auto &data = *it;
     std::get<0>(data) = newName;
-    std::get<1>(data) = eventText(WatchThread::Event::RENAMED_NEW).toStdWString();
+    std::get<1>(data) = eventText(Events::RENAMED_NEW).toStdWString();
     std::get<2>(data) += 1;
 
     const auto distance = std::distance(m_data.begin(), it);
@@ -218,22 +218,22 @@ void ObjectsTableModel::addObject(const QString &obj, const QColor &color)
 }
 
 //-----------------------------------------------------------------------------
-QString ObjectsTableModel::eventText(const WatchThread::Event &e)
+QString ObjectsTableModel::eventText(const Events &e)
 {
   switch(e)
   {
-    case WatchThread::Event::ADDED:
+    case Events::ADDED:
       return tr("Added file");
       break;
-    case WatchThread::Event::MODIFIED:
+    case Events::MODIFIED:
       return tr("Modified file");
       break;
-    case WatchThread::Event::REMOVED:
+    case Events::REMOVED:
       return tr("Removed file");
       break;
-    case WatchThread::Event::RENAMED_OLD:
+    case Events::RENAMED_OLD:
       // no break
-    case WatchThread::Event::RENAMED_NEW:
+    case Events::RENAMED_NEW:
       return tr("Renamed a file");
       break;
     default:

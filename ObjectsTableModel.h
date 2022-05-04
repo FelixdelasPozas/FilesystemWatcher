@@ -79,7 +79,7 @@ class ObjectsTableModel
      * \param[in] e Modification event.
      *
      */
-    void modification(const std::wstring obj, const WatchThread::Event e);
+    void modification(const std::wstring obj, const Events e);
 
     /** \brief Updates the model data.
      * \param[in] oldName Path of old object name.
@@ -92,7 +92,7 @@ class ObjectsTableModel
     /** \brief Returns the text associated with the event.
      *
      */
-    QString eventText(const WatchThread::Event &e);
+    QString eventText(const Events &e);
 
     std::vector<std::tuple<std::wstring, std::wstring, unsigned long, QColor>> m_data; /** model data. */
 };

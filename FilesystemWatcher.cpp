@@ -46,7 +46,7 @@ const QString ALARM_VOLUME = "Alarm volume";
 const QString DEFAULT_ALARMS = "Default alarms";
 
 Q_DECLARE_METATYPE(std::wstring);
-Q_DECLARE_METATYPE(WatchThread::Event);
+Q_DECLARE_METATYPE(Events);
 
 //-----------------------------------------------------------------------------
 FilesystemWatcher::FilesystemWatcher(QWidget *p, Qt::WindowFlags f)
@@ -59,7 +59,7 @@ FilesystemWatcher::FilesystemWatcher(QWidget *p, Qt::WindowFlags f)
 , m_alarmVolume{100}
 {
   qRegisterMetaType<std::wstring>();
-  qRegisterMetaType<WatchThread::Event>();
+  qRegisterMetaType<Events>();
 
   setupUi(this);
 
@@ -215,9 +215,9 @@ void FilesystemWatcher::onAddObjectButtonClicked()
     m_alarmVolume = dialog.alarmVolume();
     m_alarmFlags = dialog.objectAlarms();
 
-    auto thread = new WatchThread(objectPath, dialog.objectProperties(), dialog.isRecursive());
+    auto thread = new WatchThread(objectPath, dialog.objectEvents(), dialog.isRecursive());
 
-    m_objects.push_back(Object(objectPath, dialog.objectAlarms(), dialog.alarmColor(), m_alarmVolume, dialog.objectProperties(), thread));
+    m_objects.push_back(Object(objectPath, dialog.objectAlarms(), dialog.alarmColor(), m_alarmVolume, dialog.objectEvents(), thread));
 
     connect(thread, SIGNAL(error(const QString)),
             this,   SLOT(onWatcherError(const QString)));
@@ -301,7 +301,7 @@ void FilesystemWatcher::onWatcherError(const QString message)
 }
 
 //-----------------------------------------------------------------------------
-void FilesystemWatcher::onModification(const std::wstring object, const WatchThread::Event e)
+void FilesystemWatcher::onModification(const std::wstring object, const Events e)
 {
   const auto qObject = QString::fromStdWString(object);
 
@@ -326,7 +326,7 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
 
     if(!m_mute->isChecked())
     {
-      if((data.alarms & AlarmFlags::SOUND) != 0 && !m_alarmSound && !m_soundFile)
+      if((data.alarms & AlarmFlags::SOUND) != AlarmFlags::NONE && !m_alarmSound && !m_soundFile)
       {
         data.setIsInAlarm(true);
 
@@ -338,13 +338,13 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
         m_alarmSound->play();
       }
 
-      if((data.alarms & AlarmFlags::LIGHTS) != 0)
+      if((data.alarms & AlarmFlags::LIGHTS) != AlarmFlags::NONE)
       {
         if(!data.color.isValid()) data.color = QColor(255,255,255);
         LogiLED::getInstance().setColor(data.color.red(), data.color.green(), data.color.blue());
       }
 
-      if((data.alarms & (AlarmFlags::LIGHTS|AlarmFlags::SOUND)) != 0)
+      if((data.alarms & (AlarmFlags::LIGHTS|AlarmFlags::SOUND)) != AlarmFlags::NONE)
       {
         m_stopAction->setVisible(true);
         m_stopButton->setEnabled(true);
@@ -355,19 +355,19 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
     QString message;
     switch(e)
     {
-      case WatchThread::Event::ADDED:
+      case Events::ADDED:
         message = tr("Added %2").arg(suffix);
         break;
-      case WatchThread::Event::MODIFIED:
+      case Events::MODIFIED:
         message = tr("Modified %2").arg(suffix);
         break;
-      case WatchThread::Event::REMOVED:
+      case Events::REMOVED:
         message = tr("Removed %2").arg(suffix);
         break;
-      case WatchThread::Event::RENAMED_NEW:
+      case Events::RENAMED_NEW:
         message = tr("Renamed a file to %2").arg(suffix);
         break;
-      case WatchThread::Event::RENAMED_OLD:
+      case Events::RENAMED_OLD:
       // no break
       default:
         break;
@@ -377,7 +377,7 @@ void FilesystemWatcher::onModification(const std::wstring object, const WatchThr
     {
       log(message);
 
-      if(!m_mute->isChecked() && (data.alarms & AlarmFlags::MESSAGE) != 0)
+      if(!m_mute->isChecked() && (data.alarms & AlarmFlags::MESSAGE) != AlarmFlags::NONE)
       {
         const auto title = QString::fromStdWString(data.path.wstring());
         if(isVisible())
@@ -426,7 +426,7 @@ void FilesystemWatcher::onRename(const std::wstring oldName, const std::wstring 
     auto message = tr("File <b>'%2'</b> renamed to <b>'%3'</b>.").arg(QString::fromStdWString(oldName)).arg(QString::fromStdWString(newName));
     log(message);
 
-    if(!m_mute->isChecked() && ((data.alarms & AlarmFlags::MESSAGE) != 0))
+    if(!m_mute->isChecked() && ((data.alarms & AlarmFlags::MESSAGE) != AlarmFlags::NONE))
     {
       const auto title = QString::fromStdWString(data.path.wstring());
       const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
