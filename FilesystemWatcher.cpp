@@ -164,7 +164,7 @@ void FilesystemWatcher::loadSettings()
   }
 
   m_lastDir = QDir{settings.value(LAST_DIRECTORY, QDir::home().absolutePath()).toString()};
-  m_alarmVolume = settings.value(ALARM_VOLUME, 100).toInt();
+  m_alarmVolume = static_cast<unsigned char>(settings.value(ALARM_VOLUME, 100).toInt());
   m_alarmFlags = static_cast<AlarmFlags>(settings.value(DEFAULT_ALARMS, 7).toInt());
 }
 
@@ -217,20 +217,20 @@ void FilesystemWatcher::onAddObjectButtonClicked()
 
     auto thread = new WatchThread(objectPath, dialog.objectEvents(), dialog.isRecursive());
 
-    m_objects.push_back(Object(objectPath, dialog.objectAlarms(), dialog.alarmColor(), m_alarmVolume, dialog.objectEvents(), thread));
+    m_objects.push_back(Object{objectPath, m_alarmFlags, dialog.alarmColor(), m_alarmVolume, dialog.objectEvents(), thread});
 
     connect(thread, SIGNAL(error(const QString)),
             this,   SLOT(onWatcherError(const QString)));
 
-    connect(thread, SIGNAL(modified(const std::wstring, const WatchThread::Event)),
-            this,   SLOT(onModification(const std::wstring, const WatchThread::Event)));
+    connect(thread, SIGNAL(modified(const std::wstring, const Events)),
+            this,   SLOT(onModification(const std::wstring, const Events)));
 
     connect(thread, SIGNAL(renamed(const std::wstring, const std::wstring)),
             this,   SLOT(onRename(const std::wstring, const std::wstring)));
 
     auto objectsModel = qobject_cast<ObjectsTableModel*>(m_objectsTable->model());
-    connect(thread,       SIGNAL(modified(const std::wstring, const WatchThread::Event)),
-            objectsModel, SLOT(modification(const std::wstring, const WatchThread::Event)));
+    connect(thread,       SIGNAL(modified(const std::wstring, const Events)),
+            objectsModel, SLOT(modification(const std::wstring, const Events)));
     connect(thread, SIGNAL(renamed(const std::wstring, const std::wstring)),
             objectsModel, SLOT(rename(const std::wstring, const std::wstring)));
 
@@ -307,14 +307,14 @@ void FilesystemWatcher::onModification(const std::wstring object, const Events e
 
   auto matchObj = [&qObject](const Object &o)
   {
-    auto obj = QString::fromStdWString(o.path.wstring());
+    const auto obj = QString::fromStdWString(o.path.wstring());
     if(std::filesystem::is_directory(o.path))
     {
-      return qObject.startsWith(obj);
+      return qObject.startsWith(obj, Qt::CaseInsensitive);
     }
     else
     {
-      return qObject.compare(QString::fromStdWString(o.path.wstring()), Qt::CaseInsensitive) == 0;
+      return qObject.compare(obj, Qt::CaseInsensitive) == 0;
     }
   };
   auto it = std::find_if(m_objects.begin(), m_objects.end(), matchObj);
@@ -340,15 +340,14 @@ void FilesystemWatcher::onModification(const std::wstring object, const Events e
 
       if((data.alarms & AlarmFlags::LIGHTS) != AlarmFlags::NONE)
       {
+        data.setIsInAlarm(true);
+
         if(!data.color.isValid()) data.color = QColor(255,255,255);
         LogiLED::getInstance().setColor(data.color.red(), data.color.green(), data.color.blue());
       }
 
-      if((data.alarms & (AlarmFlags::LIGHTS|AlarmFlags::SOUND)) != AlarmFlags::NONE)
-      {
-        m_stopAction->setVisible(true);
-        m_stopButton->setEnabled(true);
-      }
+      m_stopAction->setVisible(data.isInAlarm());
+      m_stopButton->setEnabled(data.isInAlarm());
     }
 
     QString suffix = tr(" <b>'%1'</b>.").arg(qObject);

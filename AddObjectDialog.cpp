@@ -69,6 +69,8 @@ AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const Ala
   {
     generateColor();
     updateColorButton();
+
+    onKeyboardCheckStateChange(m_useKeyboardLights->isChecked() ? Qt::Checked : Qt::Unchecked);
   }
 }
 
@@ -78,10 +80,16 @@ AddObjectDialog::~AddObjectDialog()
   if(m_useKeyboardLights->isChecked()) stopKeyboardColors();
 
   if(m_sound->isPlaying()) m_sound->stop();
-  delete m_sound;
-  m_sound = nullptr;
-  delete m_soundFile;
-  m_soundFile = nullptr;
+  if(m_sound)
+  {
+    delete m_sound;
+    m_sound = nullptr;
+  }
+  if(m_soundFile)
+  {
+    delete m_soundFile;
+    m_soundFile = nullptr;
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -185,9 +193,9 @@ AlarmFlags AddObjectDialog::objectAlarms() const
 {
   AlarmFlags flags = AlarmFlags::NONE;
 
-  if(m_useTrayMessage->isChecked())    flags = flags | AlarmFlags::MESSAGE;
-  if(m_useKeyboardLights->isChecked()) flags = flags | AlarmFlags::LIGHTS;
-  if(m_soundAlarm->isChecked())        flags = flags | AlarmFlags::SOUND;
+  if(m_useTrayMessage->isChecked())    flags |= AlarmFlags::MESSAGE;
+  if(m_useKeyboardLights->isChecked()) flags |= AlarmFlags::LIGHTS;
+  if(m_soundAlarm->isChecked())        flags |= AlarmFlags::SOUND;
 
   return flags;
 }
