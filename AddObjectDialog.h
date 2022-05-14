@@ -172,7 +172,7 @@ class AddObjectDialog
      * \param[in] isDirectory True if the object selected is a directory and false otherwise.
      *
      */
-    void updateEventsWidgets(bool isDirectory);
+    void updateWidgets(bool isDirectory);
 
     /** \brief Helper method to create the temporary file and classes for the sound.
      *

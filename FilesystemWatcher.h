@@ -127,12 +127,10 @@ class FilesystemWatcher
      */
     void stopAlarms();
 
-    /** \brief Enables/disables the reset object button when the user selects one in the table.
-     * \param[in] selected QModelIndex of selected object.
-     * \param[in] deselected QModelIndex of deselected object.
+    /** \brief Enables/disables the reset and delete object button when user selects items on the table.
      *
      */
-    void onObjectSelected(const QModelIndex &selected, const QModelIndex &deselected);
+    void onSelectionChanged();
 
     /** \brief Resets the events number of the selected object.
      *

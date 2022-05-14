@@ -69,8 +69,6 @@ AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const Ala
   {
     generateColor();
     updateColorButton();
-
-    onKeyboardCheckStateChange(m_useKeyboardLights->isChecked() ? Qt::Checked : Qt::Unchecked);
   }
 }
 
@@ -127,10 +125,7 @@ void AddObjectDialog::onAddFileClicked()
     filename = QDir::toNativeSeparators(filename);
     m_object->setText(filename);
 
-    m_alarmGroup->setEnabled(true);
-    m_propertiesGroup->setEnabled(true);
-
-    updateEventsWidgets(false);
+    updateWidgets(false);
 
     m_dir = QFileInfo{filename}.absoluteDir();
   }
@@ -160,10 +155,7 @@ void AddObjectDialog::onAddFolderClicked()
     folder = QDir::toNativeSeparators(folder);
     m_object->setText(folder);
 
-    m_alarmGroup->setEnabled(true);
-    m_propertiesGroup->setEnabled(true);
-
-    updateEventsWidgets(true);
+    updateWidgets(true);
 
     m_dir = QDir{folder}.absolutePath();
   }
@@ -290,7 +282,7 @@ void AddObjectDialog::onSoundAlarmCheckStateChanged(int state)
 }
 
 //-----------------------------------------------------------------------------
-void AddObjectDialog::updateEventsWidgets(bool isDirectory)
+void AddObjectDialog::updateWidgets(bool isDirectory)
 {
   for(auto checkBox: {m_modifyProp, m_renameProp, m_deleteProp})
   {
@@ -305,6 +297,12 @@ void AddObjectDialog::updateEventsWidgets(bool isDirectory)
   }
 
   if(isDirectory) m_recursiveProp->setChecked(false);
+
+  m_alarmGroup->setEnabled(true);
+  m_propertiesGroup->setEnabled(true);
+
+  onKeyboardCheckStateChange(m_useKeyboardLights->isChecked() ? Qt::Checked : Qt::Unchecked);
+  onSoundAlarmCheckStateChanged(m_soundAlarm->isChecked() ? Qt::Checked : Qt::Unchecked);
 }
 
 //-----------------------------------------------------------------------------

@@ -67,6 +67,8 @@ FilesystemWatcher::FilesystemWatcher(QWidget *p, Qt::WindowFlags f)
   m_objectsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeMode::Stretch);
   m_objectsTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeMode::Stretch);
   m_objectsTable->setContextMenuPolicy(Qt::CustomContextMenu);
+  m_objectsTable->setSelectionMode(QAbstractItemView::SelectionMode::MultiSelection);
+  m_objectsTable->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
 
   connectSignals();
 
@@ -107,8 +109,8 @@ void FilesystemWatcher::connectSignals()
   connect(m_trayIcon, SIGNAL(messageClicked()),
           this,       SLOT(stopAlarms()));
 
-  connect(m_objectsTable->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
-          this,                             SLOT(onObjectSelected(const QModelIndex &, const QModelIndex &)));
+  connect(m_objectsTable->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+          this,                             SLOT(onSelectionChanged()));
 
   connect(m_objectsTable, SIGNAL(customContextMenuRequested(const QPoint &)),
           this,           SLOT(onCustomMenuRequested(const QPoint &)));
@@ -181,16 +183,23 @@ void FilesystemWatcher::saveSettings()
 }
 
 //-----------------------------------------------------------------------------
-void FilesystemWatcher::onObjectSelected(const QModelIndex &selected, const QModelIndex &deselected)
+void FilesystemWatcher::onSelectionChanged()
 {
-  if(selected.isValid())
+  const auto indexes = m_objectsTable->selectionModel()->selectedRows();
+  bool resetEnabled = false;
+
+  for(auto index: indexes)
   {
-    auto distance = selected.row();
-    auto &data = m_objects.at(distance);
-    m_reset->setEnabled(data.eventsNumber != 0);
+    if(index.isValid())
+    {
+      auto distance = index.row();
+      auto &data = m_objects.at(distance);
+      resetEnabled |= (data.eventsNumber != 0);
+    }
   }
 
-  m_removeObject->setEnabled(selected.isValid() && !m_objects.empty());
+  m_reset->setEnabled(resetEnabled);
+  m_removeObject->setEnabled(!indexes.empty() && !m_objects.empty());
 }
 
 //-----------------------------------------------------------------------------
@@ -507,47 +516,65 @@ void FilesystemWatcher::stopAlarms()
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::onResetButtonClicked()
 {
-  auto index = m_objectsTable->selectionModel()->currentIndex();
-  if(static_cast<unsigned int>(index.row()) < m_objects.size())
+  auto indexes = m_objectsTable->selectionModel()->selectedRows();
+
+  auto moreThan = [](const QModelIndex &lhs, const QModelIndex &rhs)
+  { return lhs.row() > rhs.row(); };
+
+  std::sort(indexes.begin(), indexes.end(), moreThan);
+
+  for(const auto index: indexes)
   {
-    auto &data = m_objects.at(index.row());
-    data.eventsNumber = 0;
+    if(static_cast<unsigned int>(index.row()) < m_objects.size())
+    {
+      auto &data = m_objects.at(index.row());
+      data.eventsNumber = 0;
 
-    auto objectsModel = qobject_cast<ObjectsTableModel*>(m_objectsTable->model());
-    objectsModel->resetObject(data.path.wstring());
+      auto objectsModel = qobject_cast<ObjectsTableModel*>(m_objectsTable->model());
+      objectsModel->resetObject(data.path.wstring());
 
-    m_reset->setEnabled(false);
+      m_reset->setEnabled(false);
 
-    if(data.isInAlarm()) stopAlarms();
+      if(data.isInAlarm()) stopAlarms();
+    }
   }
 }
 
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::onRemoveButtonClicked()
 {
-  auto index = m_objectsTable->selectionModel()->currentIndex();
-  if(static_cast<unsigned int>(index.row()) < m_objects.size())
+  auto indexes = m_objectsTable->selectionModel()->selectedRows();
+
+  auto moreThan = [](const QModelIndex &lhs, const QModelIndex &rhs)
+  { return lhs.row() > rhs.row(); };
+
+  std::sort(indexes.begin(), indexes.end(), moreThan);
+
+  for(const auto index: indexes)
   {
-    auto &data = m_objects.at(index.row());
-    auto objectsModel = qobject_cast<ObjectsTableModel*>(m_objectsTable->model());
-    objectsModel->removeObject(data.path.wstring());
-
-    if(data.isInAlarm()) stopAlarms();
-
-    m_objects.erase(m_objects.begin() + index.row());
-
-    const auto objectsNum = m_objects.size();
-
-    m_removeObject->setEnabled(objectsNum != 0);
-
-    if(objectsNum == 0)
+    if(static_cast<unsigned int>(index.row()) < m_objects.size())
     {
-      m_trayIcon->setToolTip(tr("Ready to watch"));
+      auto &data = m_objects.at(index.row());
+      auto objectsModel = qobject_cast<ObjectsTableModel*>(m_objectsTable->model());
+      objectsModel->removeObject(data.path.wstring());
+
+      if(data.isInAlarm()) stopAlarms();
+
+      m_objects.erase(m_objects.begin() + index.row());
     }
-    else
-    {
-      m_trayIcon->setToolTip(tr("Watching %1 object%2").arg(objectsNum).arg(objectsNum > 1 ? "s":""));
-    }
+  }
+
+  const auto objectsNum = m_objects.size();
+
+  m_removeObject->setEnabled(objectsNum != 0);
+
+  if(objectsNum == 0)
+  {
+    m_trayIcon->setToolTip(tr("Ready to watch"));
+  }
+  else
+  {
+    m_trayIcon->setToolTip(tr("Watching %1 object%2").arg(objectsNum).arg(objectsNum > 1 ? "s":""));
   }
 }
 
