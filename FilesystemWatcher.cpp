@@ -211,12 +211,18 @@ void FilesystemWatcher::onAddObjectButtonClicked()
   {
     const auto obj = dialog.objectPath();
     const auto objectPath = std::filesystem::path(obj.toStdWString());
+    if(!std::filesystem::exists(objectPath))
+    {
+      const auto message = tr("Cannot find object '%1'.").arg(obj);
+      QMessageBox::information(this, tr("Add object"), message, QMessageBox::Ok);
+      return;
+    }
 
     auto equalPath = [&objectPath](const struct Object &o) { return o.path.compare(objectPath) == 0; };
     auto it = std::find_if(m_objects.cbegin(), m_objects.cend(), equalPath);
     if(it != m_objects.cend())
     {
-      const auto message = tr("Object '%1' is already being watched.").arg(QString::fromStdString(objectPath.string()));
+      const auto message = tr("Object '%1' is already being watched.").arg(obj);
       QMessageBox::information(this, tr("Add object"), message, QMessageBox::Ok);
       return;
     }
@@ -252,6 +258,9 @@ void FilesystemWatcher::onAddObjectButtonClicked()
     if(objectsNum == 1) updateTrayIcon();
 
     m_trayIcon->setToolTip(tr("Watching %1 object%2").arg(objectsNum).arg(objectsNum > 1 ? "s":""));
+
+    const auto message = tr("Watching object \"%1\".").arg(obj);
+    log(message);
   }
 }
 
@@ -555,12 +564,15 @@ void FilesystemWatcher::onRemoveButtonClicked()
     if(static_cast<unsigned int>(index.row()) < m_objects.size())
     {
       auto &data = m_objects.at(index.row());
+      const auto message = tr("Stopped watching object \"%1\".").arg(QString::fromStdWString(data.path.wstring()));
       auto objectsModel = qobject_cast<ObjectsTableModel*>(m_objectsTable->model());
       objectsModel->removeObject(data.path.wstring());
 
       if(data.isInAlarm()) stopAlarms();
 
       m_objects.erase(m_objects.begin() + index.row());
+
+      log(message);
     }
   }
 

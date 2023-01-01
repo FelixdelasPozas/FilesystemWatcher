@@ -58,6 +58,7 @@ AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const Ala
   m_useKeyboardLights->setChecked((m_alarmFlags & AlarmFlags::LIGHTS) != AlarmFlags::NONE);
   m_useTrayMessage->setChecked((m_alarmFlags & AlarmFlags::MESSAGE) != AlarmFlags::NONE);
   m_soundAlarm->setChecked((m_alarmFlags & AlarmFlags::SOUND) != AlarmFlags::NONE);
+  buttonBox->button( QDialogButtonBox::Ok )->setEnabled( false );
 
   connectSignals();
 
@@ -113,6 +114,8 @@ void AddObjectDialog::onAddFileClicked()
   if(!filename.isEmpty())
   {
     const auto objectPath = std::filesystem::path(filename.toStdWString());
+    if(!std::filesystem::exists(objectPath)) return;
+
     auto equalPath = [&objectPath](const struct Object &o) { return o.getPath().compare(objectPath) == 0; };
     auto it = std::find_if(m_objects.cbegin(), m_objects.cend(), equalPath);
     if(it != m_objects.cend())
@@ -128,6 +131,8 @@ void AddObjectDialog::onAddFileClicked()
     updateWidgets(false);
 
     m_dir = QFileInfo{filename}.absoluteDir();
+
+    buttonBox->button( QDialogButtonBox::Ok )->setEnabled(true);
   }
 }
 
@@ -143,6 +148,8 @@ void AddObjectDialog::onAddFolderClicked()
   if(!folder.isEmpty())
   {
     const auto objectPath = std::filesystem::path(folder.toStdWString());
+    if(!std::filesystem::exists(objectPath)) return;
+
     auto equalPath = [&objectPath](const struct Object &o) { return o.getPath().compare(objectPath) == 0; };
     auto it = std::find_if(m_objects.cbegin(), m_objects.cend(), equalPath);
     if(it != m_objects.cend())
@@ -158,6 +165,8 @@ void AddObjectDialog::onAddFolderClicked()
     updateWidgets(true);
 
     m_dir = QDir{folder}.absolutePath();
+
+    buttonBox->button( QDialogButtonBox::Ok )->setEnabled(true);
   }
 }
 
