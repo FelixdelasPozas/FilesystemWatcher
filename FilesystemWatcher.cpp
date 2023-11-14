@@ -48,6 +48,8 @@ const QString DEFAULT_ALARMS = "Default alarms";
 Q_DECLARE_METATYPE(std::wstring);
 Q_DECLARE_METATYPE(Events);
 
+static std::atomic<bool> hasTrayMessage = false;
+
 //-----------------------------------------------------------------------------
 FilesystemWatcher::FilesystemWatcher(QWidget *p, Qt::WindowFlags f)
 : QDialog(p,f)
@@ -406,9 +408,12 @@ void FilesystemWatcher::onModification(const std::wstring object, const Events e
         }
         else
         {
-          const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
-          message.remove("<b>").remove("</b>");
-          m_trayIcon->showMessage(title, message, icon, 1500);
+          if(!hasTrayMessage.exchange(true))
+          {
+	    const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
+	    message.remove("<b>").remove("</b>");
+	    m_trayIcon->showMessage(title, message, icon, 1500);
+          }
         }
       }
     }
@@ -456,8 +461,11 @@ void FilesystemWatcher::onRename(const std::wstring oldName, const std::wstring 
       }
       else
       {
-        message.remove("<b>").remove("</b>");
-        m_trayIcon->showMessage(title, message, icon, 1500);
+	if(!hasTrayMessage.exchange(true))
+	{
+	  message.remove("<b>").remove("</b>");
+	  m_trayIcon->showMessage(title, message, icon, 1500);
+	}
       }
     }
   }
@@ -520,6 +528,8 @@ void FilesystemWatcher::stopAlarms()
     auto stopAlarm = [](Object &o){ o.setIsInAlarm(false); };
     std::for_each(m_objects.begin(), m_objects.end(), stopAlarm);
   }
+
+  hasTrayMessage = false;
 }
 
 //-----------------------------------------------------------------------------
