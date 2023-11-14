@@ -40,7 +40,7 @@ Add object dialog. The option to use keyboard lights as an alarm will only be av
 ![Add object dialog](https://user-images.githubusercontent.com/12167134/109077833-0b1a2b80-76fd-11eb-90cf-f80727e7a155.png)
 
 # Repository information
-**Version**: 1.1.5
+**Version**: 1.1.6
 
 **Status**: finished
 
@@ -50,7 +50,7 @@ Add object dialog. The option to use keyboard lights as an alarm will only be av
 
 | Language                     |files          |blank        |comment           |code  |
 |:-----------------------------|--------------:|------------:|-----------------:|-----:|
-| C++                          |    7          |  307        |    221           |1287  |
+| C++                          |    7          |  309        |    221           |1295  |
 | C/C++ Header                 |    6          |  152        |    443           | 309  |
 | CMake                        |    1          |   18        |      7           |  57  |
-| **Total**                    |   **14**      |  **477**    |   **671**        |**1653**|
+| **Total**                    |   **14**      |  **479**    |   **671**        |**1661**|
