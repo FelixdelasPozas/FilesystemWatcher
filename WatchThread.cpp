@@ -26,6 +26,7 @@
 #include <shlwapi.h>
 #include <windows.h>
 #include <fileapi.h>
+#include <array>
 
 //-----------------------------------------------------------------------------
 WatchThread::WatchThread(const std::filesystem::path &object, const Events events, bool recursive, QObject *p)

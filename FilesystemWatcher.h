@@ -241,9 +241,16 @@ class Object
     unsigned char getVolume() const
     { return volume; }
 
+    /** \brief Returns true if the object is in alarm mode.
+     * 
+     */
     bool isInAlarm() const
     { return inAlarm; }
 
+    /** \brief Set the object in alarm or not.
+     * \param[in] value True to set in alarm and false otherwise. 
+     * 
+     */
     void setIsInAlarm(const bool value)
     { inAlarm = value; }
 

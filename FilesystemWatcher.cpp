@@ -89,7 +89,6 @@ FilesystemWatcher::~FilesystemWatcher()
   auto stopThread = [](Object &o)
   {
     o.thread->abort();
-    o.thread->deleteLater();
   };
   std::for_each(m_objects.begin(), m_objects.end(), stopThread);
 }
@@ -126,14 +125,14 @@ void FilesystemWatcher::setupTrayIcon()
   auto showAction = new QAction(tr("Restore..."));
   connect(showAction, SIGNAL(triggered(bool)), this, SLOT(onTrayActivated()));
 
-  m_stopAction = new QAction(tr("Stop alarms"));
+  m_stopAction = new QAction(QIcon(":/FilesystemWatcher/alarm.svg"), tr("Stop alarms"));
   connect(m_stopAction, SIGNAL(triggered(bool)), this, SLOT(stopAlarms()));
   m_stopAction->setVisible(false);
 
-  auto addFile = new QAction(tr("Watch object..."));
+  auto addFile = new QAction(QIcon(":/FilesystemWatcher/eye-1.svg"), tr("Watch object..."));
   connect(addFile, SIGNAL(triggered(bool)), this, SLOT(onAddObjectButtonClicked()));
 
-  auto muteAction = new QAction(tr("Mute"));
+  auto muteAction = new QAction(QIcon(":/FilesystemWatcher/eye-disabled.svg"), tr("Mute"));
   connect(muteAction, SIGNAL(triggered(bool)), this, SLOT(onMuteActionClicked()));
 
   auto aboutAction = new QAction(tr("About..."));
@@ -579,6 +578,8 @@ void FilesystemWatcher::onRemoveButtonClicked()
       objectsModel->removeObject(data.path.wstring());
 
       if(data.isInAlarm()) stopAlarms();
+      
+      data.thread->abort();
 
       m_objects.erase(m_objects.begin() + index.row());
 
@@ -604,8 +605,8 @@ void FilesystemWatcher::onRemoveButtonClicked()
 void FilesystemWatcher::onCustomMenuRequested(const QPoint &p)
 {
   QMenu menu;
-  auto removeAction = new QAction("Remove");
-  auto resetAction  = new QAction("Reset");
+  auto removeAction = new QAction(QIcon(":/FilesystemWatcher/remove.svg"), tr("Remove"));
+  auto resetAction  = new QAction(QIcon(":/FilesystemWatcher/reset.svg"), tr("Reset"));
 
   menu.addAction(removeAction);
   menu.addAction(resetAction);
