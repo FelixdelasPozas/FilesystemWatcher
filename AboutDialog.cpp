@@ -23,9 +23,11 @@
 
 // Qt
 #include <QtGlobal>
+#include <QDateTime>
 
 
-const QString AboutDialog::VERSION = QString("version 1.1.6");
+const QString AboutDialog::VERSION{"version 1.1.7"};
+const QString COPYRIGHT{"Copyright (c) 2021-%1 Félix de las Pozas Álvarez"};
 
 //-----------------------------------------------------------------
 AboutDialog::AboutDialog(QWidget *parent, Qt::WindowFlags flags)
@@ -42,4 +44,5 @@ AboutDialog::AboutDialog(QWidget *parent, Qt::WindowFlags flags)
   m_version->setText(VERSION);
   m_qtVersion->setText(tr("version %1").arg(qVersion()));
   m_logitechVersion->setText(tr("version %1").arg(QString::fromStdString(LogiLED::getInstance().version())));
+  m_copyright->setText(COPYRIGHT.arg(QDateTime::currentDateTime().date().year()));
 }
