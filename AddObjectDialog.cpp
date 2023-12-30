@@ -65,6 +65,7 @@ AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const Ala
   if(!LogiLED::isAvailable())
   {
     m_useKeyboardLights->setEnabled(false);
+    m_lightButton->setEnabled(false);
   }
   else
   {
@@ -236,6 +237,8 @@ void AddObjectDialog::onColorButtonClicked()
 //-----------------------------------------------------------------------------
 void AddObjectDialog::updateColorButton()
 {
+  if(!LogiLED::isAvailable()) return;
+
   QPixmap pixmap(QSize{24,24});
   pixmap.fill(m_color);
 
@@ -266,6 +269,8 @@ void AddObjectDialog::stopKeyboardColors()
 //-----------------------------------------------------------------------------
 void AddObjectDialog::onKeyboardCheckStateChange(int state)
 {
+  if(!LogiLED::isAvailable()) return;
+
   if(state == Qt::Checked)
   {
     setKeyboardColor(m_color);
