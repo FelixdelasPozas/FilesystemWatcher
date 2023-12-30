@@ -20,6 +20,8 @@ If minimized the application will show a tray icon only with an 'eye of Sauron' 
 * cross-platform build system: [CMake](http://www.cmake.org/cmake/resources/software.html).
 * compiler: [Mingw64](http://sourceforge.net/projects/mingw-w64/) on Windows.
 
+> **_NOTE:_**  The last gcc compiler that generated correct code for the Windows OS notifications is gcc 9.2.0. Newer compilers (tested 11, 12 and 13 versions) do not. The version in the releases is compiled with 9.2.0. 
+
 ## External dependencies:
 The following libraries are required:
 * [Qt opensource framework](http://www.qt.io/).
@@ -40,7 +42,7 @@ Add object dialog. The option to use keyboard lights as an alarm will only be av
 ![Add object dialog](https://user-images.githubusercontent.com/12167134/109077833-0b1a2b80-76fd-11eb-90cf-f80727e7a155.png)
 
 # Repository information
-**Version**: 1.1.7
+**Version**: 1.1.8
 
 **Status**: finished
 
@@ -50,7 +52,7 @@ Add object dialog. The option to use keyboard lights as an alarm will only be av
 
 | Language                     |files          |blank        |comment           |code  |
 |:-----------------------------|--------------:|------------:|-----------------:|-----:|
-| C++                          |    7          |  310        |    221           |1299  |
+| C++                          |    7          |  312        |    222           |1309  |
 | C/C++ Header                 |    6          |  152        |    450           | 309  |
-| CMake                        |    1          |   18        |      7           |  58  |
-| **Total**                    |   **14**      |  **480**    |   **678**        |**1666**|
+| CMake                        |    1          |   18        |      9           |  57  |
+| **Total**                    |   **14**      |  **482**    |   **681**        |**1675**|
