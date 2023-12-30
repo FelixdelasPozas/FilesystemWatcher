@@ -52,9 +52,9 @@ void WatchThread::abort()
 void WatchThread::run()
 {
   const auto id = tr("Monitor thread of '%1'").arg(QString::fromStdWString(m_object.wstring()));
-  const auto dirName = (m_isDirectory) ? m_object.wstring() : m_object.parent_path().wstring();
+  const auto name = (m_isDirectory) ? m_object.wstring() : m_object.parent_path().wstring();
 
-  auto objectHandle = CreateFileW(dirName.c_str(),
+  auto objectHandle = CreateFileW(name.c_str(),
                                   FILE_LIST_DIRECTORY,
                                   FILE_SHARE_READ | FILE_SHARE_DELETE | FILE_SHARE_WRITE,
                                   nullptr,
@@ -125,17 +125,18 @@ void WatchThread::run()
           {
             const std::wstring changed_file_w{ information->FileName, information->FileNameLength / sizeof(information->FileName[0]) };
             const Events event = eventMapping.at(information->Action);
-
+            
             if((m_events & event) != Events::NONE)
             {
               if(!processEvent(changed_file_w, event))
               {
                 // break;
                 //
-                // NOTE: Mingw64 9.2.0 worked fine, upgrading to Mingw64 11.3.0
+                // NOTE: gcc 9.2.0 worked fine, upgrading to gcc 11.3.0
                 // broke this giving a modified event for the desired file
                 // even when nothing has changed after another HANDLE has been
                 // modified in the same directory.
+                // Updated: 31-12-2023 Still broken with gcc 13.1.0.
               }
             }
 
@@ -197,6 +198,9 @@ bool WatchThread::processEvent(const std::wstring &name, const Events &e)
       case Events::RENAMED_OLD:
         m_oldName = m_object.wstring() + L"\\" + name;
         break;
+      case Events::NONE:
+        return false;
+        break;
       default:
         emit modified(m_object.wstring() + L"\\" + name, e);
         break;
@@ -227,6 +231,9 @@ bool WatchThread::processEvent(const std::wstring &name, const Events &e)
         case Events::RENAMED_OLD:
           // update m_object with the new name the next event.
           m_isRename = true;
+          break;
+        case Events::NONE:
+          return false;
           break;
         default:
           emit modified(m_object.wstring(), e);

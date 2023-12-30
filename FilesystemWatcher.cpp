@@ -343,9 +343,13 @@ void FilesystemWatcher::onModification(const std::wstring object, const Events e
     auto &data = *it;
     data.eventsNumber += 1;
 
+    const bool hasSound  = (data.alarms & AlarmFlags::SOUND) != AlarmFlags::NONE;
+    const bool hasLights = (data.alarms & AlarmFlags::LIGHTS) != AlarmFlags::NONE;
+    const bool hasMessage = (data.alarms & AlarmFlags::MESSAGE) != AlarmFlags::NONE;
+
     if(!m_mute->isChecked())
     {
-      if((data.alarms & AlarmFlags::SOUND) != AlarmFlags::NONE && !m_alarmSound && !m_soundFile)
+      if(hasSound && !m_alarmSound && !m_soundFile)
       {
         data.setIsInAlarm(true);
 
@@ -357,7 +361,7 @@ void FilesystemWatcher::onModification(const std::wstring object, const Events e
         m_alarmSound->play();
       }
 
-      if((data.alarms & AlarmFlags::LIGHTS) != AlarmFlags::NONE)
+      if(hasLights)
       {
         data.setIsInAlarm(true);
 
@@ -395,7 +399,7 @@ void FilesystemWatcher::onModification(const std::wstring object, const Events e
     {
       log(message);
 
-      if(!m_mute->isChecked() && (data.alarms & AlarmFlags::MESSAGE) != AlarmFlags::NONE)
+      if(!m_mute->isChecked() && hasMessage)
       {
         const auto title = QString::fromStdWString(data.path.wstring());
         if(isVisible())
@@ -409,9 +413,9 @@ void FilesystemWatcher::onModification(const std::wstring object, const Events e
         {
           if(!hasTrayMessage.exchange(true))
           {
-	    const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
-	    message.remove("<b>").remove("</b>");
-	    m_trayIcon->showMessage(title, message, icon, 1500);
+            const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
+            message.remove("<b>").remove("</b>");
+            m_trayIcon->showMessage(title, message, icon, 1500);
           }
         }
       }
@@ -446,8 +450,10 @@ void FilesystemWatcher::onRename(const std::wstring oldName, const std::wstring 
 
     auto message = tr("File <b>'%2'</b> renamed to <b>'%3'</b>.").arg(QString::fromStdWString(oldName)).arg(QString::fromStdWString(newName));
     log(message);
+    
+    const bool hasMessage = (data.alarms & AlarmFlags::MESSAGE) != AlarmFlags::NONE;
 
-    if(!m_mute->isChecked() && ((data.alarms & AlarmFlags::MESSAGE) != AlarmFlags::NONE))
+    if(!m_mute->isChecked() && hasMessage)
     {
       const auto title = QString::fromStdWString(data.path.wstring());
       const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
@@ -460,11 +466,11 @@ void FilesystemWatcher::onRename(const std::wstring oldName, const std::wstring 
       }
       else
       {
-	if(!hasTrayMessage.exchange(true))
-	{
-	  message.remove("<b>").remove("</b>");
-	  m_trayIcon->showMessage(title, message, icon, 1500);
-	}
+        if(!hasTrayMessage.exchange(true))
+        {
+          message.remove("<b>").remove("</b>");
+          m_trayIcon->showMessage(title, message, icon, 1500);
+        }
       }
     }
   }
@@ -487,7 +493,7 @@ void FilesystemWatcher::updateTrayIcon()
   else
   {
     if(m_objects.empty())
-    {
+    {  
       index = 0;
     }
     else

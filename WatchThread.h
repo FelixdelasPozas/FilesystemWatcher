@@ -141,7 +141,7 @@ class WatchThread
     static QString getLastErrorString(const DWORD errorCode);
 
     /** \brief Processes the event for the 'name' object. Returns true on success and
-     *  false otherwise.
+     *  false otherwise. Event is not a composition of flags, just an individual event.
      * \param[in] name Name given in the event information struct.
      * \param[in] e Event.
      *
