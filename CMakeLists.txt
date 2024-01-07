@@ -5,7 +5,7 @@ project (FilesystemWatcher)
 # Version Number
 set (FILESYSTEM_WATCHER_VERSION_MAJOR 1)
 set (FILESYSTEM_WATCHER_VERSION_MINOR 1)
-set (FILESYSTEM_WATCHER_VERSION_PATCH 8)
+set (FILESYSTEM_WATCHER_VERSION_PATCH 9)
 
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
