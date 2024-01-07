@@ -567,8 +567,8 @@ void FilesystemWatcher::onResetButtonClicked()
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::onRemoveButtonClicked()
 {
-  auto indexes = m_objectsTable->selectionModel()->selectedRows();
-
+  auto indexes = m_objectsTable->selectionModel()->selectedIndexes();
+  
   auto moreThan = [](const QModelIndex &lhs, const QModelIndex &rhs)
   { return lhs.row() > rhs.row(); };
 
@@ -622,7 +622,7 @@ void FilesystemWatcher::onCustomMenuRequested(const QPoint &p)
   auto selectedAction = menu.exec(m_objectsTable->viewport()->mapToGlobal(p));
   const auto idx = m_objectsTable->indexAt(p);
   m_objectsTable->selectionModel()->blockSignals(true);
-  m_objectsTable->setCurrentIndex(idx);
+  m_objectsTable->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect);
   m_objectsTable->selectionModel()->blockSignals(false);
 
   if(selectedAction == removeAction)
