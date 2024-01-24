@@ -187,6 +187,16 @@ class FilesystemWatcher
      */
     bool showMessage(const QString title, const QString message);
 
+    /** \brief Sounds the appropiate alarms. 
+     * \param[in] hasSound True if the event has sound alarm.
+     * \param[in] hasLights True if the event has lights alarm.
+     * \param[in] hasMessage True if the event has message alarm. 
+     * \param[in] obj Object of the event.
+     * \param[in] type Event type. 
+     * 
+     */
+    void soundAlarms(bool hasSound, bool hasLights, bool hasMessage, Object &obj, const Events type);
+
     QSystemTrayIcon    *m_trayIcon;    /** tray icon.                                      */
     bool                m_needsExit;   /** true to close the application, false otherwise. */
     std::vector<Object> m_objects;     /** list of watched objects.                        */

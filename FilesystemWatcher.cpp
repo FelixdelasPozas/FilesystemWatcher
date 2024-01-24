@@ -347,83 +347,14 @@ void FilesystemWatcher::onModification(const std::wstring object, const Events e
     const bool hasLights = (data.alarms & AlarmFlags::LIGHTS) != AlarmFlags::NONE;
     const bool hasMessage = (data.alarms & AlarmFlags::MESSAGE) != AlarmFlags::NONE;
 
-    if(!m_mute->isChecked())
+    if(!m_mute->isChecked() && (hasSound || hasLights || hasMessage))
     {
-      if(hasSound && !m_alarmSound && !m_soundFile)
-      {
-        data.setIsInAlarm(true);
-
-        m_alarmSound = new QSoundEffect(this);
-        m_soundFile = QTemporaryFile::createLocalFile(":/FilesystemWatcher/Beeper.wav");
-        m_alarmSound->setSource(QUrl::fromLocalFile(m_soundFile->fileName()));
-        m_alarmSound->setLoopCount(QSoundEffect::Infinite);
-        m_alarmSound->setVolume(static_cast<double>(data.volume)/100.0);
-        m_alarmSound->play();
-      }
-
-      if(hasLights)
-      {
-        data.setIsInAlarm(true);
-
-        if(!data.color.isValid()) data.color = QColor(255,255,255);
-        LogiLED::getInstance().setColor(data.color.red(), data.color.green(), data.color.blue());
-      }
-
-      m_stopAction->setVisible(data.isInAlarm());
-      m_stopButton->setEnabled(data.isInAlarm());
+      soundAlarms(hasSound, hasLights, hasMessage, data, e);
     }
 
-    QString suffix = tr(" <b>'%1'</b>.").arg(qObject);
-    QString message;
-    switch(e)
-    {
-      case Events::ADDED:
-        message = tr("Added %2").arg(suffix);
-        break;
-      case Events::MODIFIED:
-        message = tr("Modified %2").arg(suffix);
-        break;
-      case Events::REMOVED:
-        message = tr("Removed %2").arg(suffix);
-        break;
-      case Events::RENAMED_NEW:
-        message = tr("Renamed a file to %2").arg(suffix);
-        break;
-      case Events::RENAMED_OLD:
-      // no break
-      default:
-        break;
-    }
-
-    if(!message.isEmpty())
-    {
-      log(message);
-
-      if(!m_mute->isChecked() && hasMessage)
-      {
-        const auto title = QString::fromStdWString(data.path.wstring());
-        if(isVisible())
-        {
-          if(showMessage(title, message))
-          {
-            stopAlarms();
-          }
-        }
-        else
-        {
-          if(!hasTrayMessage.exchange(true))
-          {
-            const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
-            message.remove("<b>").remove("</b>");
-            m_trayIcon->showMessage(title, message, icon, 1500);
-          }
-        }
-      }
-    }
-  }
-
-  m_copy->setEnabled(true);
-  m_reset->setEnabled(true);
+    m_copy->setEnabled(true);
+    m_reset->setEnabled(true);
+  }    
 }
 
 //-----------------------------------------------------------------------------
@@ -444,35 +375,20 @@ void FilesystemWatcher::onRename(const std::wstring oldName, const std::wstring 
     data.path = std::filesystem::path{newName};
     data.eventsNumber += 1;
 
-    // no need to alarm user because a rename also triggers an additional
-    // modification event (modification of last modified time?) that will
-    // trigger the alarms.
-
     auto message = tr("File <b>'%2'</b> renamed to <b>'%3'</b>.").arg(QString::fromStdWString(oldName)).arg(QString::fromStdWString(newName));
     log(message);
-    
+
+    const bool hasSound  = (data.alarms & AlarmFlags::SOUND) != AlarmFlags::NONE;
+    const bool hasLights = (data.alarms & AlarmFlags::LIGHTS) != AlarmFlags::NONE;
     const bool hasMessage = (data.alarms & AlarmFlags::MESSAGE) != AlarmFlags::NONE;
 
-    if(!m_mute->isChecked() && hasMessage)
+    if(!m_mute->isChecked() && (hasSound || hasLights || hasMessage))
     {
-      const auto title = QString::fromStdWString(data.path.wstring());
-      const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
-      if(isVisible())
-      {
-        if(showMessage(title, message))
-        {
-          stopAlarms();
-        }
-      }
-      else
-      {
-        if(!hasTrayMessage.exchange(true))
-        {
-          message.remove("<b>").remove("</b>");
-          m_trayIcon->showMessage(title, message, icon, 1500);
-        }
-      }
+      soundAlarms(hasSound, hasLights, hasMessage, data, Events::RENAMED_OLD);
     }
+
+    m_copy->setEnabled(true);
+    m_reset->setEnabled(true);
   }
 }
 
@@ -692,4 +608,86 @@ bool FilesystemWatcher::showMessage(const QString title, const QString message)
   }
 
   return false;
+}
+
+//-----------------------------------------------------------------------------
+void FilesystemWatcher::soundAlarms(bool hasSound, bool hasLights, bool hasMessage, Object &obj, const Events type)
+{
+  if(m_mute->isChecked()) return;
+
+  if(hasSound && !m_alarmSound && !m_soundFile)
+  {
+    obj.setIsInAlarm(true);
+
+    m_alarmSound = new QSoundEffect(this);
+    m_soundFile = QTemporaryFile::createLocalFile(":/FilesystemWatcher/Beeper.wav");
+    m_alarmSound->setSource(QUrl::fromLocalFile(m_soundFile->fileName()));
+    m_alarmSound->setLoopCount(QSoundEffect::Infinite);
+    m_alarmSound->setVolume(static_cast<double>(obj.volume)/100.0);
+    m_alarmSound->play();
+  }
+
+  if(hasLights)
+  {
+    obj.setIsInAlarm(true);
+
+    if(!obj.color.isValid()) obj.color = QColor(255,255,255);
+    LogiLED::getInstance().setColor(obj.color.red(), obj.color.green(), obj.color.blue());
+  }
+
+  m_stopAction->setVisible(obj.isInAlarm());
+  m_stopButton->setEnabled(obj.isInAlarm());
+
+  if(hasMessage)
+  {
+    const auto qObject = QString::fromStdWString(obj.path.wstring());
+    const QString suffix = tr(" <b>'%1'</b>.").arg(qObject);
+      
+    QString message;
+    switch(type)
+    {
+      case Events::ADDED:
+        message = tr("Added %2").arg(suffix);
+        break;
+      case Events::MODIFIED:
+        message = tr("Modified %2").arg(suffix);
+        break;
+      case Events::REMOVED:
+        message = tr("Removed %2").arg(suffix);
+        break;
+      case Events::RENAMED_NEW:
+        message = tr("Renamed a file to %2").arg(suffix);
+        break;
+      case Events::RENAMED_OLD:
+      // no break
+      default:
+        break;
+    }
+
+    if(!message.isEmpty())
+    {
+      log(message);
+
+      if(!m_mute->isChecked() && hasMessage)
+      {
+        if(isVisible())
+        {
+          if(showMessage(qObject, message))
+          {
+            stopAlarms();
+          }
+        }
+        else
+        {
+          if(!hasTrayMessage.exchange(true))
+          {
+            const auto icon  = QIcon(":/FilesystemWatcher/eye-1.svg");
+            message.remove("<b>").remove("</b>");
+            m_trayIcon->showMessage(qObject, message, icon, 1500);
+          }
+        }
+      }
+    }
+  }
+
 }
