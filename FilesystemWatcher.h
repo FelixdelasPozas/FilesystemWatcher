@@ -206,6 +206,7 @@ class FilesystemWatcher
     QDir                m_lastDir;     /** last opened dir to select objects.              */
     unsigned char       m_alarmVolume; /** volume of the sound alarm [0-100].              */
     AlarmFlags          m_alarmFlags;  /** default alarms for add object dialog.           */
+    Events              m_events;      /** default events for add object dialog.           */
 };
 
 /** \class Object

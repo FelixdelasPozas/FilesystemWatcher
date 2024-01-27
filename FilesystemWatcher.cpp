@@ -44,6 +44,7 @@ const QString GEOMETRY = "Geometry";
 const QString LAST_DIRECTORY = "Last used directory";
 const QString ALARM_VOLUME = "Alarm volume";
 const QString DEFAULT_ALARMS = "Default alarms";
+const QString DEFAULT_EVENTS = "Default events";
 
 Q_DECLARE_METATYPE(std::wstring);
 Q_DECLARE_METATYPE(Events);
@@ -169,6 +170,7 @@ void FilesystemWatcher::loadSettings()
   m_lastDir = QDir{settings.value(LAST_DIRECTORY, QDir::home().absolutePath()).toString()};
   m_alarmVolume = static_cast<unsigned char>(settings.value(ALARM_VOLUME, 100).toInt());
   m_alarmFlags = static_cast<AlarmFlags>(settings.value(DEFAULT_ALARMS, 7).toInt());
+  m_events = static_cast<Events>(settings.value(DEFAULT_EVENTS, 63).toInt());
 }
 
 //-----------------------------------------------------------------------------
@@ -180,6 +182,7 @@ void FilesystemWatcher::saveSettings()
   settings.setValue(LAST_DIRECTORY, m_lastDir.absolutePath());
   settings.setValue(ALARM_VOLUME, m_alarmVolume);
   settings.setValue(DEFAULT_ALARMS, static_cast<int>(m_alarmFlags));
+  settings.setValue(DEFAULT_EVENTS, static_cast<int>(m_events));
   settings.sync();
 }
 
@@ -206,7 +209,7 @@ void FilesystemWatcher::onSelectionChanged()
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::onAddObjectButtonClicked()
 {
-  AddObjectDialog dialog(m_lastDir, m_alarmVolume, m_alarmFlags, m_objects, this);
+  AddObjectDialog dialog(m_lastDir, m_alarmVolume, m_alarmFlags, m_events, m_objects, this);
 
   if(QDialog::Accepted == dialog.exec())
   {
@@ -230,6 +233,7 @@ void FilesystemWatcher::onAddObjectButtonClicked()
 
     m_alarmVolume = dialog.alarmVolume();
     m_alarmFlags = dialog.objectAlarms();
+    m_events = dialog.objectEvents();
 
     auto thread = new WatchThread(objectPath, dialog.objectEvents(), dialog.isRecursive());
 
@@ -535,12 +539,11 @@ void FilesystemWatcher::onCustomMenuRequested(const QPoint &p)
   menu.addSeparator();
   menu.addAction(new QAction("Cancel"));
 
-  auto selectedAction = menu.exec(m_objectsTable->viewport()->mapToGlobal(p));
   const auto idx = m_objectsTable->indexAt(p);
-  m_objectsTable->selectionModel()->blockSignals(true);
   m_objectsTable->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect);
-  m_objectsTable->selectionModel()->blockSignals(false);
+  Q_ASSERT(m_objectsTable->selectionModel()->selectedIndexes().size() == 1);
 
+  auto selectedAction = menu.exec(m_objectsTable->viewport()->mapToGlobal(p));
   if(selectedAction == removeAction)
   {
     onRemoveButtonClicked();

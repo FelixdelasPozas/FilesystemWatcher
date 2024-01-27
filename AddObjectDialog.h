@@ -68,12 +68,13 @@ class AddObjectDialog
      * \param[in] lastDir Last used directory for opening objects.
      * \param[in] alarmVolume Default volume of the sound alarm.
      * \param[in] flags Alarm flags for dialog.
+     * \param[in] events Events flags for dialog.
      * \param[in] objects List of current wathed objects.
      * \param[in] p Raw pointer of the object parent of this one.
      * \param[in] f Dialog flags.
      *
      */
-    explicit AddObjectDialog(QDir &lastDir, const int alarmVolume, const AlarmFlags flags,
+    explicit AddObjectDialog(QDir &lastDir, const int alarmVolume, const AlarmFlags flags, const Events events,
                              const std::vector<Object> &objects, QWidget *p = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 
     /** \brief AddObjectDialog class virtual destructor.
@@ -190,6 +191,7 @@ class AddObjectDialog
     QTemporaryFile            *m_soundFile;  /** wave file temporary file.      */
     QDir                      &m_dir;        /** last opened dir.               */
     AlarmFlags                 m_alarmFlags; /** last used alarm flags.         */
+    Events                     m_events;     /** last used events.              */
     const std::vector<Object> &m_objects;    /** list of objects being watched. */
 };
 

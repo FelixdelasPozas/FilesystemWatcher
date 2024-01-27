@@ -39,11 +39,12 @@
 #include <set>
 
 //-----------------------------------------------------------------------------
-AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const AlarmFlags flags,
+AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const AlarmFlags flags, const Events events,
                                  const std::vector<Object> &objects, QWidget *p, Qt::WindowFlags f)
 : QDialog(p,f)
 , m_dir(lastDir)
 , m_alarmFlags{flags}
+, m_events{events}
 , m_objects{objects}
 {
   setupUi(this);
@@ -58,7 +59,7 @@ AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const Ala
   m_useKeyboardLights->setChecked((m_alarmFlags & AlarmFlags::LIGHTS) != AlarmFlags::NONE);
   m_useTrayMessage->setChecked((m_alarmFlags & AlarmFlags::MESSAGE) != AlarmFlags::NONE);
   m_soundAlarm->setChecked((m_alarmFlags & AlarmFlags::SOUND) != AlarmFlags::NONE);
-  buttonBox->button( QDialogButtonBox::Ok )->setEnabled( false );
+  buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
 
   connectSignals();
 
@@ -133,7 +134,7 @@ void AddObjectDialog::onAddFileClicked()
 
     m_dir = QFileInfo{filename}.absoluteDir();
 
-    buttonBox->button( QDialogButtonBox::Ok )->setEnabled(true);
+    buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
   }
 }
 
@@ -167,7 +168,7 @@ void AddObjectDialog::onAddFolderClicked()
 
     m_dir = QDir{folder}.absolutePath();
 
-    buttonBox->button( QDialogButtonBox::Ok )->setEnabled(true);
+    buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
   }
 }
 
@@ -186,6 +187,7 @@ Events AddObjectDialog::objectEvents() const
   if(m_modifyProp->isChecked()) result |= Events::MODIFIED;
   if(m_deleteProp->isChecked()) result |= Events::REMOVED;
   if(m_renameProp->isChecked()) result |= Events::RENAMED_NEW|Events::RENAMED_OLD;
+  if(m_recursiveProp->isChecked()) result |= Events::RECURSIVE;
 
   return result;
 }
@@ -298,19 +300,24 @@ void AddObjectDialog::onSoundAlarmCheckStateChanged(int state)
 //-----------------------------------------------------------------------------
 void AddObjectDialog::updateWidgets(bool isDirectory)
 {
-  for(auto checkBox: {m_modifyProp, m_renameProp, m_deleteProp})
-  {
-    checkBox->setEnabled(true);
-    checkBox->setChecked(true);
-  }
+  const bool hasAddFlag = (m_events & Events::ADDED) != Events::NONE;
+  const bool hasModifyFlag = (m_events & Events::MODIFIED) != Events::NONE;
+  const bool hasRemoveFlag = (m_events & Events::REMOVED) != Events::NONE;
+  const bool hasRenameFlag = (m_events & (Events::RENAMED_NEW|Events::RENAMED_OLD)) != Events::NONE;
+  const bool hasRecursive = (m_events & Events::RECURSIVE) != Events::NONE;
 
-  for(auto checkBox: {m_createProp, m_recursiveProp})
-  {
-    checkBox->setEnabled(isDirectory);
-    checkBox->setChecked(isDirectory);
-  }
+  for(auto &cbox: {m_modifyProp, m_deleteProp, m_renameProp})
+    cbox->setEnabled(true);
 
-  if(isDirectory) m_recursiveProp->setChecked(false);
+  m_createProp->setChecked(hasAddFlag);
+  m_createProp->setEnabled(isDirectory);
+
+  m_modifyProp->setChecked(hasModifyFlag);
+  m_deleteProp->setChecked(hasRemoveFlag);
+  m_renameProp->setChecked(hasRenameFlag);
+
+  m_recursiveProp->setChecked(hasRecursive);
+  m_recursiveProp->setEnabled(isDirectory);
 
   m_alarmGroup->setEnabled(true);
   m_propertiesGroup->setEnabled(true);

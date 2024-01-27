@@ -38,7 +38,8 @@ enum class Events: char
   REMOVED     = 0b00000010,
   MODIFIED    = 0b00000100,
   RENAMED_OLD = 0b00001000,
-  RENAMED_NEW = 0b00010000
+  RENAMED_NEW = 0b00010000,
+  RECURSIVE   = 0b00100000 /** added by me for UI reasons, not in the api. */
 };
 
 inline Events operator|(Events lhs, Events rhs)
