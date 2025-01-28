@@ -5,7 +5,7 @@ project (FilesystemWatcher)
 # Version Number
 set (FILESYSTEM_WATCHER_VERSION_MAJOR 1)
 set (FILESYSTEM_WATCHER_VERSION_MINOR 1)
-set (FILESYSTEM_WATCHER_VERSION_PATCH 11)
+set (FILESYSTEM_WATCHER_VERSION_PATCH 12)
 
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -68,6 +68,7 @@ set (SOURCES
 	WatchThread.cpp
 	ObjectsTableModel.cpp
 	LogiLED.cpp
+	Utils.cpp
 	)
   
 set (EXTERNAL_LIBRARIES

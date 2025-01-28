@@ -20,13 +20,15 @@
 // Project
 #include "AboutDialog.h"
 #include "LogiLED.h"
+#include "Utils.h"
 
 // Qt
 #include <QtGlobal>
 #include <QDateTime>
+#include <QDesktopServices>
+#include <QUrl>
 
-
-const QString AboutDialog::VERSION{"version 1.1.11"};
+const QString AboutDialog::VERSION{"version 1.1.12"};
 const QString COPYRIGHT{"Copyright (c) 2021-%1 Félix de las Pozas Álvarez"};
 
 //-----------------------------------------------------------------
@@ -45,4 +47,7 @@ AboutDialog::AboutDialog(QWidget *parent, Qt::WindowFlags flags)
   m_qtVersion->setText(tr("version %1").arg(qVersion()));
   m_logitechVersion->setText(tr("version %1").arg(QString::fromStdString(LogiLED::getInstance().version())));
   m_copyright->setText(COPYRIGHT.arg(QDateTime::currentDateTime().date().year()));
+
+  QObject::connect(m_kofiLabel, &ClickableHoverLabel::clicked,
+                  [this](){ QDesktopServices::openUrl(QUrl{"https://ko-fi.com/felixdelaspozas"}); });  
 }

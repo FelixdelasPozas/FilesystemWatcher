@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="rsc/resources.qrc">
-    <normaloff>:/FilesystemWatcher/application.ico</normaloff>:/FilesystemWatcher/application.ico</iconset>
+    <normaloff>:/FilesystemWatcher/eye-1.svg</normaloff>:/FilesystemWatcher/eye-1.svg</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0">
    <property name="spacing">

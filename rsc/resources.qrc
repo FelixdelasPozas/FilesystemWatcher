@@ -15,5 +15,6 @@
     <file>copy.svg</file>
     <file>reset.svg</file>
     <file>Beeper.wav</file>
+	<file>kofi_logo.png</file>
   </qresource>
 </RCC>
