@@ -29,7 +29,7 @@ The following libraries are required:
 
 # Install
 
-Download and execute the ![latest release](https://github.com/FelixdelasPozas/FilesystemWatcher/releases) installer.
+FileSystemWatcher is available for Windows 7 onwards. You can download the latest installer from the ![releases page](https://github.com/FelixdelasPozas/FilesystemWatcher/releases). Neither the application or the installer are digitally signed so the system will ask for approval before running it the first time.
 
 # Screenshots
 
