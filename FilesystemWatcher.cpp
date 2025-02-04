@@ -51,6 +51,8 @@ Q_DECLARE_METATYPE(Events);
 
 static std::atomic<bool> hasTrayMessage = false;
 
+const QString INI_FILENAME{"FilesystemWatcher.ini"};
+
 //-----------------------------------------------------------------------------
 FilesystemWatcher::FilesystemWatcher(QWidget *p, Qt::WindowFlags f)
 : QDialog(p,f)
@@ -160,31 +162,31 @@ void FilesystemWatcher::setupTrayIcon()
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::loadSettings()
 {
-  QSettings settings("Felix de las Pozas Alvarez", "FilesystemWatcher");
+  const auto settings = applicationSettings();
 
-  if(settings.contains(GEOMETRY))
+  if(settings->contains(GEOMETRY))
   {
-    auto geometry = settings.value(GEOMETRY).toByteArray();
+    auto geometry = settings->value(GEOMETRY).toByteArray();
     restoreGeometry(geometry);
   }
 
-  m_lastDir = QDir{settings.value(LAST_DIRECTORY, QDir::home().absolutePath()).toString()};
-  m_alarmVolume = static_cast<unsigned char>(settings.value(ALARM_VOLUME, 100).toInt());
-  m_alarmFlags = static_cast<AlarmFlags>(settings.value(DEFAULT_ALARMS, 7).toInt());
-  m_events = static_cast<Events>(settings.value(DEFAULT_EVENTS, 63).toInt());
+  m_lastDir = QDir{settings->value(LAST_DIRECTORY, QDir::home().absolutePath()).toString()};
+  m_alarmVolume = static_cast<unsigned char>(settings->value(ALARM_VOLUME, 100).toInt());
+  m_alarmFlags = static_cast<AlarmFlags>(settings->value(DEFAULT_ALARMS, 7).toInt());
+  m_events = static_cast<Events>(settings->value(DEFAULT_EVENTS, 63).toInt());
 }
 
 //-----------------------------------------------------------------------------
 void FilesystemWatcher::saveSettings()
 {
-  QSettings settings("Felix de las Pozas Alvarez", "FilesystemWatcher");
+  auto settings = applicationSettings();
 
-  settings.setValue(GEOMETRY, saveGeometry());
-  settings.setValue(LAST_DIRECTORY, m_lastDir.absolutePath());
-  settings.setValue(ALARM_VOLUME, m_alarmVolume);
-  settings.setValue(DEFAULT_ALARMS, static_cast<int>(m_alarmFlags));
-  settings.setValue(DEFAULT_EVENTS, static_cast<int>(m_events));
-  settings.sync();
+  settings->setValue(GEOMETRY, saveGeometry());
+  settings->setValue(LAST_DIRECTORY, m_lastDir.absolutePath());
+  settings->setValue(ALARM_VOLUME, m_alarmVolume);
+  settings->setValue(DEFAULT_ALARMS, static_cast<int>(m_alarmFlags));
+  settings->setValue(DEFAULT_EVENTS, static_cast<int>(m_events));
+  settings->sync();
 }
 
 //-----------------------------------------------------------------------------
@@ -699,4 +701,16 @@ void FilesystemWatcher::soundAlarms(bool hasSound, bool hasLights, bool hasMessa
     }
   }
 
+}
+
+//-----------------------------------------------------------------------------
+std::unique_ptr<QSettings> FilesystemWatcher::applicationSettings() const
+{
+  QDir applicationDir{QCoreApplication::applicationDirPath()};
+  if(applicationDir.exists(INI_FILENAME))
+  {
+    return std::make_unique<QSettings>(INI_FILENAME, QSettings::IniFormat);
+  }
+
+  return std::make_unique<QSettings>("Felix de las Pozas Alvarez", "FilesystemWatcher");
 }

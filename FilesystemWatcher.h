@@ -31,6 +31,7 @@
 #include "WatchThread.h"
 
 class QCloseEvent;
+class QSettings;
 class QSoundEffect;
 class QTemporaryFile;
 class Object;
@@ -196,6 +197,11 @@ class FilesystemWatcher
      * 
      */
     void soundAlarms(bool hasSound, bool hasLights, bool hasMessage, Object &obj, const Events type);
+
+    /** \brief Helper method to return the correct QSettings depending on the presence of INI file.
+     *
+     */
+    std::unique_ptr<QSettings> applicationSettings() const;
 
     QSystemTrayIcon    *m_trayIcon;    /** tray icon.                                      */
     bool                m_needsExit;   /** true to close the application, false otherwise. */
