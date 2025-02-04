@@ -16,5 +16,9 @@
     <file>reset.svg</file>
     <file>Beeper.wav</file>
 	<file>kofi_logo.png</file>
+	<file>exit.svg</file>
+	<file>info.svg</file>
+	<file>minimize.svg</file>
+	<file>maximize.svg</file>
   </qresource>
 </RCC>

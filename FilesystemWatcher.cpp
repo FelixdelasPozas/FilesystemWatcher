@@ -18,10 +18,10 @@
  */
 
 // Project
-#include "FilesystemWatcher.h"
-#include "AboutDialog.h"
-#include "ObjectsTableModel.h"
-#include "LogiLED.h"
+#include <FilesystemWatcher.h>
+#include <AboutDialog.h>
+#include <ObjectsTableModel.h>
+#include <LogiLED.h>
 
 // Qt
 #include <QMenu>
@@ -99,6 +99,7 @@ void FilesystemWatcher::connectSignals()
 {
   connect(m_quit,         SIGNAL(clicked(bool)), this, SLOT(quitApplication()));
   connect(m_about,        SIGNAL(clicked(bool)), this, SLOT(onAboutButtonClicked()));
+  connect(m_minimize,     SIGNAL(clicked(bool)), this, SLOT(close()));
   connect(m_addObject,    SIGNAL(clicked(bool)), this, SLOT(onAddObjectButtonClicked()));
   connect(m_copy,         SIGNAL(clicked(bool)), this, SLOT(onCopyButtonClicked()));
   connect(m_stopButton,   SIGNAL(clicked(bool)), this, SLOT(stopAlarms()));
@@ -123,7 +124,7 @@ void FilesystemWatcher::setupTrayIcon()
 {
   auto menu = new QMenu(tr("Menu"));
 
-  auto showAction = new QAction(tr("Restore..."));
+  auto showAction = new QAction(QIcon(":/FilesystemWatcher/maximize.svg"), tr("Restore..."));
   connect(showAction, SIGNAL(triggered(bool)), this, SLOT(onTrayActivated()));
 
   m_stopAction = new QAction(QIcon(":/FilesystemWatcher/alarm.svg"), tr("Stop alarms"));
@@ -136,10 +137,10 @@ void FilesystemWatcher::setupTrayIcon()
   auto muteAction = new QAction(QIcon(":/FilesystemWatcher/eye-disabled.svg"), tr("Mute"));
   connect(muteAction, SIGNAL(triggered(bool)), this, SLOT(onMuteActionClicked()));
 
-  auto aboutAction = new QAction(tr("About..."));
+  auto aboutAction = new QAction(QIcon(":/FilesystemWatcher/info.svg"), tr("About..."));
   connect(aboutAction, SIGNAL(triggered(bool)), this, SLOT(onAboutButtonClicked()));
 
-  auto quitAction = new QAction(tr("Quit"));
+  auto quitAction = new QAction(QIcon(":/FilesystemWatcher/exit.svg"), tr("Quit"));
   connect(quitAction, SIGNAL(triggered(bool)), this, SLOT(quitApplication()));
 
   menu->addAction(showAction);
@@ -287,7 +288,10 @@ void FilesystemWatcher::onAboutButtonClicked()
 void FilesystemWatcher::quitApplication()
 {
   m_needsExit = true;
-  close();
+  if(this->isVisible())
+    close();
+  else
+    closeEvent(nullptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -312,7 +316,7 @@ void FilesystemWatcher::closeEvent(QCloseEvent *e)
   }
   else
   {
-    QDialog::closeEvent(e);
+    if(e) QDialog::closeEvent(e);
     QApplication::exit(0);
   }
 }
@@ -580,11 +584,13 @@ void FilesystemWatcher::onMuteActionClicked()
   if(state)
   {
     action->setText(tr("Unmute"));
+    m_mute->setToolTip(tr("Unmute alarms."));
     stopAlarms();
   }
   else
   {
     action->setText(tr("Mute"));
+    m_mute->setToolTip(tr("Mute alarms."));
   }
 
   updateTrayIcon();
@@ -623,7 +629,7 @@ void FilesystemWatcher::soundAlarms(bool hasSound, bool hasLights, bool hasMessa
     obj.setIsInAlarm(true);
 
     m_alarmSound = new QSoundEffect(this);
-    m_soundFile = QTemporaryFile::createLocalFile(":/FilesystemWatcher/Beeper.wav");
+    m_soundFile = QTemporaryFile::createNativeFile(":/FilesystemWatcher/Beeper.wav");
     m_alarmSound->setSource(QUrl::fromLocalFile(m_soundFile->fileName()));
     m_alarmSound->setLoopCount(QSoundEffect::Infinite);
     m_alarmSound->setVolume(static_cast<double>(obj.volume)/100.0);

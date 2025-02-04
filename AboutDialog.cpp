@@ -18,9 +18,9 @@
  */
 
 // Project
-#include "AboutDialog.h"
-#include "LogiLED.h"
-#include "Utils.h"
+#include <AboutDialog.h>
+#include <LogiLED.h>
+#include <Utils.h>
 
 // Qt
 #include <QtGlobal>
@@ -28,7 +28,7 @@
 #include <QDesktopServices>
 #include <QUrl>
 
-const QString AboutDialog::VERSION{"version 1.1.12"};
+const QString AboutDialog::VERSION{"version 1.2.0"};
 const QString COPYRIGHT{"Copyright (c) 2021-%1 Félix de las Pozas Álvarez"};
 
 //-----------------------------------------------------------------
@@ -45,7 +45,12 @@ AboutDialog::AboutDialog(QWidget *parent, Qt::WindowFlags flags)
   m_compilationDate->setText(tr("Compiled on ") + compilation_date + compilation_time);
   m_version->setText(VERSION);
   m_qtVersion->setText(tr("version %1").arg(qVersion()));
-  m_logitechVersion->setText(tr("version %1").arg(QString::fromStdString(LogiLED::getInstance().version())));
+
+  if(LogiLED::getInstance().isAvailable())
+    m_logitechVersion->setText(tr("version %1").arg(QString::fromStdString(LogiLED::getInstance().version())));
+  else
+    m_logitechVersion->setText(tr("<font color=red>No keyboard present</font>"));
+
   m_copyright->setText(COPYRIGHT.arg(QDateTime::currentDateTime().date().year()));
 
   QObject::connect(m_kofiLabel, &ClickableHoverLabel::clicked,

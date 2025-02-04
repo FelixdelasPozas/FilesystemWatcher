@@ -18,7 +18,7 @@
  */
 
 // Project
-#include "WatchThread.h"
+#include <WatchThread.h>
 
 // C++
 #include <cassert>

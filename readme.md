@@ -15,16 +15,16 @@ The alarms can be a text message (or tray icon message if minimized) a sound ala
 
 If minimized the application will show a tray icon only with an 'eye of Sauron' animation if a file or directory is being watched.  
 
+If you want to support this project you can do it on [Ko-fi](https://ko-fi.com/felixdelaspozas).
+
 # Compilation requirements
 ## To build the tool:
 * cross-platform build system: [CMake](http://www.cmake.org/cmake/resources/software.html).
 * compiler: [Mingw64](http://sourceforge.net/projects/mingw-w64/) on Windows.
 
-> **_NOTE:_**  The last gcc compiler that generated correct code for the Windows OS notifications is gcc 9.2.0. Newer compilers (tested 11, 12 and 13 versions) do not. The version in the releases is compiled with 9.2.0. 
-
 ## External dependencies:
 The following libraries are required:
-* [Qt opensource framework](http://www.qt.io/).
+* [Qt Library](http://www.qt.io/).
 * [Logitech Gaming LED SDK](https://www.logitechg.com/es-es/innovation/developer-lab.html).
 
 # Install
@@ -33,16 +33,16 @@ FileSystemWatcher is available for Windows 7 onwards. You can download the lates
 
 # Screenshots
 
-Simple main dialog. The last column with the alarm color will only appear if a Logitech RGB keyboard is found on the system.
+Simple main dialog. A last column with the alarm color will only appear if a Logitech RGB keyboard is found on the system.
 
-![Main dialog](https://user-images.githubusercontent.com/12167134/163689600-b2b67215-fa84-4dd9-a3c8-27dc30a7fe23.png)
+![Maindialog](https://github.com/user-attachments/assets/c656c101-b44e-498f-905a-b0f2f0d45506)
 
 Add object dialog. The option to use keyboard lights as an alarm will only be available if you have a Logitech RGB keyboard.
 
-![Add object dialog](https://user-images.githubusercontent.com/12167134/109077833-0b1a2b80-76fd-11eb-90cf-f80727e7a155.png)
+![Add object dialog](https://github.com/user-attachments/assets/89fcfe6b-135d-4ee5-af31-d1226d59093e)
 
 # Repository information
-**Version**: 1.1.12
+**Version**: 1.2.0
 
 **Status**: finished
 
@@ -52,7 +52,7 @@ Add object dialog. The option to use keyboard lights as an alarm will only be av
 
 | Language                     |files          |blank        |comment           |code  |
 |:-----------------------------|--------------:|------------:|-----------------:|-----:|
-| C++                          |    8          |  327        |    239           |1330  |
-| C/C++ Header                 |    7          |  166        |    493           | 344  |
-| CMake                        |    1          |   18        |      9           |  58  |
-| **Total**                    |   **16**      |  **511**    |   **741**        |**1732**|
+| C++                          |    8          |  329        |    239           |1340  |
+| C/C++ Header                 |    7          |  166        |    494           | 344  |
+| CMake                        |    1          |   17        |      9           |  59  |
+| **Total**                    |   **16**      |  **512**    |   **741**        |**1743**|

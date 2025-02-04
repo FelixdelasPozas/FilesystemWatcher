@@ -21,7 +21,7 @@
 #define OBJECTSTABLEMODEL_H_
 
 // Project
-#include "WatchThread.h"
+#include <WatchThread.h>
 
 // Qt
 #include <QAbstractTableModel>

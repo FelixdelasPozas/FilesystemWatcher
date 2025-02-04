@@ -18,8 +18,8 @@
  */
 
 // Project
-#include "ObjectsTableModel.h"
-#include "LogiLED.h"
+#include <ObjectsTableModel.h>
+#include <LogiLED.h>
 
 // Qt
 #include <QString>
@@ -176,7 +176,7 @@ void ObjectsTableModel::modification(const std::wstring obj, const Events e)
     auto tl = index(distance, 1);
     auto br = index(distance, 2);
 
-    emit dataChanged(tl, br, { Qt::DisplayRole, Qt::BackgroundColorRole });
+    emit dataChanged(tl, br, { Qt::DisplayRole, Qt::BackgroundRole });
   }
 }
 
@@ -203,7 +203,7 @@ void ObjectsTableModel::rename(const std::wstring oldName, const std::wstring ne
     auto tl = index(distance, 0);
     auto br = index(distance, 2);
 
-    emit dataChanged(tl, br, { Qt::DisplayRole, Qt::BackgroundColorRole });
+    emit dataChanged(tl, br, { Qt::DisplayRole, Qt::BackgroundRole });
   }
 }
 
@@ -262,7 +262,7 @@ void ObjectsTableModel::resetObject(const std::wstring &obj)
     auto tl = index(distance, 1);
     auto br = index(distance, 2);
 
-    emit dataChanged(tl, br, { Qt::DisplayRole, Qt::BackgroundColorRole });
+    emit dataChanged(tl, br, { Qt::DisplayRole, Qt::BackgroundRole });
   }
 }
 

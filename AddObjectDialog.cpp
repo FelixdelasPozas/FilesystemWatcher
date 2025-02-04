@@ -18,9 +18,9 @@
  */
 
 // Project
-#include "AddObjectDialog.h"
-#include "FilesystemWatcher.h"
-#include "LogiLED.h"
+#include <AddObjectDialog.h>
+#include <FilesystemWatcher.h>
+#include <LogiLED.h>
 
 // Qt
 #include <QFileDialog>
@@ -31,6 +31,7 @@
 #include <QTemporaryFile>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QPushButton.h>
 
 // C++
 #include <minwindef.h>
@@ -330,7 +331,7 @@ void AddObjectDialog::updateWidgets(bool isDirectory)
 void AddObjectDialog::createSoundFile()
 {
   m_sound = new QSoundEffect(this);
-  m_soundFile = QTemporaryFile::createLocalFile(":/FilesystemWatcher/Beeper.wav");
+  m_soundFile = QTemporaryFile::createNativeFile(":/FilesystemWatcher/Beeper.wav");
   m_sound->setSource(QUrl::fromLocalFile(m_soundFile->fileName()));
   m_sound->setLoopCount(3);
   m_sound->setVolume(1);
