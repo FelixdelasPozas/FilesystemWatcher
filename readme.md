@@ -29,7 +29,9 @@ The following libraries are required:
 
 # Install
 
-FileSystemWatcher is available for Windows 7 onwards. You can download the latest installer from the ![releases page](https://github.com/FelixdelasPozas/FilesystemWatcher/releases). Neither the application or the installer are digitally signed so the system will ask for approval before running it the first time.
+FileSystemWatcher is available for Windows 10 onwards. You can download the latest installer from the ![releases page](https://github.com/FelixdelasPozas/FilesystemWatcher/releases). Neither the application or the installer are digitally signed so the system will ask for approval before running it the first time.
+
+The last version compatible with Windows 7 & 8 is version 1.1.12 that you can download [here](https://github.com/FelixdelasPozas/FilesystemWatcher/releases/tag/1.1.12).
 
 # Screenshots
 
@@ -42,7 +44,7 @@ Add object dialog. The option to use keyboard lights as an alarm will only be av
 ![Add object dialog](https://github.com/user-attachments/assets/89fcfe6b-135d-4ee5-af31-d1226d59093e)
 
 # Repository information
-**Version**: 1.2.0
+**Version**: 1.2.1
 
 **Status**: finished
 
@@ -52,7 +54,7 @@ Add object dialog. The option to use keyboard lights as an alarm will only be av
 
 | Language                     |files          |blank        |comment           |code  |
 |:-----------------------------|--------------:|------------:|-----------------:|-----:|
-| C++                          |    8          |  329        |    239           |1340  |
-| C/C++ Header                 |    7          |  166        |    494           | 344  |
-| CMake                        |    1          |   17        |      9           |  59  |
-| **Total**                    |   **16**      |  **512**    |   **741**        |**1743**|
+| C++                          |    8          |  332        |    240           |1350  |
+| C/C++ Header                 |    7          |  167        |    497           | 346  |
+| CMake                        |    1          |   18        |      8           |  60  |
+| **Total**                    |   **16**      |  **517**    |   **745**        |**1756**|

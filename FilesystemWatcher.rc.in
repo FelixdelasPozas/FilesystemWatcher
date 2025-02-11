@@ -10,11 +10,11 @@ BEGIN
   BEGIN
     BLOCK "040904B0"
     BEGIN
-    VALUE "CompanyName", "Félix de las Pozas Álvarez"
+    VALUE "CompanyName", "Felix de las Pozas Alvarez"
     VALUE "FileDescription", "FilesystemWatcher"
       VALUE "FileVersion", "@FILESYSTEM_WATCHER_VERSION_MAJOR@.@FILESYSTEM_WATCHER_VERSION_MINOR@.@FILESYSTEM_WATCHER_VERSION_PATCH@"
       VALUE "InternalName", "FilesystemWatcher"
-      VALUE "LegalCopyright", "GNU Public License"
+      VALUE "LegalCopyright", "2021-@CURRENT_YEAR@ Felix de las Pozas Alvarez"
       VALUE "OriginalFilename", "FilesystemWatcher"
       VALUE "ProductName", "FilesystemWatcher"
       VALUE "ProductVersion", "@FILESYSTEM_WATCHER_VERSION_MAJOR@.@FILESYSTEM_WATCHER_VERSION_MINOR@.@FILESYSTEM_WATCHER_VERSION_PATCH@"

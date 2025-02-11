@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>470</width>
-    <height>431</height>
+    <height>380</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>470</width>
-    <height>431</height>
+    <height>380</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>470</width>
-    <height>431</height>
+    <height>380</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -89,7 +89,7 @@
          <item>
           <widget class="QLabel" name="m_version">
            <property name="text">
-            <string>version 1.0.0</string>
+            <string>version</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -217,7 +217,7 @@ QGroupBox::title {
             <item>
              <widget class="QLabel" name="m_qtVersion">
               <property name="text">
-               <string>version 5.9</string>
+               <string>version</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -328,43 +328,16 @@ QGroupBox::title {
     </layout>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="font">
-      <font>
-       <bold>true</bold>
-      </font>
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Icons courtesy of &lt;a href=&quot;https://www.svgrepo.com/&quot; title=&quot;Flaticon&quot;&gt;SVG Repo&lt;/a&gt;</string>
      </property>
-     <property name="styleSheet">
-      <string notr="true">QGroupBox {
-    border: 1px solid gray;
-    border-radius: 5px;
-    margin-top: 2ex;
-}
-
-QGroupBox::title {
-    subcontrol-origin: margin;
-    subcontrol-position: top center; /* position at the top center */
-    padding: 0px 5px;
-}</string>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
-     <property name="title">
-      <string>Icons</string>
+     <property name="openExternalLinks">
+      <bool>true</bool>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_6">
-      <item>
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>&lt;div&gt;Icons courtesy of &lt;a href=&quot;https://www.flaticon.com/&quot; title=&quot;Flaticon&quot;&gt;www.flaticon.com&lt;/a&gt; licensed by &lt;a href=&quot;http://creativecommons.org/licenses/by/3.0/&quot; title=&quot;Creative Commons BY 3.0&quot; target=&quot;_blank&quot;&gt;CC 3.0 BY&lt;/a&gt;&lt;/div&gt;</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-        <property name="openExternalLinks">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
     </widget>
    </item>
    <item>

@@ -66,14 +66,16 @@ AddObjectDialog::AddObjectDialog(QDir &lastDir, const int alarmVolume, const Ala
 
   if(!LogiLED::isAvailable())
   {
+    const auto text = tr("No Logitech keyboard detected.");
     m_useKeyboardLights->setEnabled(false);
+    m_useKeyboardLights->setToolTip(text);
     m_lightButton->setEnabled(false);
+    m_lightButton->setToolTip(text);
   }
   else
-  {
     generateColor();
-    updateColorButton();
-  }
+
+  updateColorButton();
 }
 
 //-----------------------------------------------------------------------------
@@ -240,8 +242,6 @@ void AddObjectDialog::onColorButtonClicked()
 //-----------------------------------------------------------------------------
 void AddObjectDialog::updateColorButton()
 {
-  if(!LogiLED::isAvailable()) return;
-
   QPixmap pixmap(QSize{24,24});
   pixmap.fill(m_color);
 
