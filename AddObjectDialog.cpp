@@ -248,7 +248,7 @@ void AddObjectDialog::updateColorButton()
   QIcon icon(pixmap);
 
   m_lightButton->setIcon(icon);
-  m_lightButton->setEnabled(m_useKeyboardLights->isChecked());
+  m_lightButton->setEnabled(m_useKeyboardLights->isChecked() && LogiLED::isAvailable());
 }
 
 //-----------------------------------------------------------------------------
